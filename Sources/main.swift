@@ -7,8 +7,15 @@ do {
     exit(1)
 }
 
-enum KrustError: Error {
+enum KrustCLIError: Error {
     case invalidArguments
+}
+struct KrustError: LocalizedError {
+    let line: Int
+    let message: String
+    var errorDescription: String? {
+        "L\(line): \(message)"
+    }
 }
 
 func main() throws {
@@ -21,7 +28,7 @@ func main() throws {
         let script = try readFile(arguments[1])
         try run(script)
     default:
-        throw KrustError.invalidArguments
+        throw KrustCLIError.invalidArguments
     }
 }
 
@@ -43,4 +50,11 @@ func readFile(_ path: String) throws -> String {
     return try String(contentsOf: url, encoding: .utf8)
 }
 
-func run(_ script: String) throws {}
+func run(_ source: String) throws {
+    let scanner = Scanner(source: source)
+    let tokens = scanner.scanTokens()
+
+    for token in tokens {
+        print(token)
+    }
+}
