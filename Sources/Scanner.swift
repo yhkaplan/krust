@@ -33,26 +33,38 @@ class Scanner {
     private func scanToken() throws {
         let char = try advance()
         switch char {
+        // 1 char tokens
         case "(":
-            try addToken(.leftParen)
+            addToken(.leftParen)
         case ")":
-            try addToken(.rightParen)
+            addToken(.rightParen)
         case "{":
-            try addToken(.leftBrace)
+            addToken(.leftBrace)
         case "}":
-            try addToken(.rightBrace)
+            addToken(.rightBrace)
         case ",":
-            try addToken(.comma)
+            addToken(.comma)
         case ".":
-            try addToken(.dot)
+            addToken(.dot)
         case "-":
-            try addToken(.minus)
+            addToken(.minus)
         case "+":
-            try addToken(.plus)
+            addToken(.plus)
         case ";":
-            try addToken(.semicolon)
+            addToken(.semicolon)
         case "*":
-            try addToken(.star)
+            addToken(.star)
+
+        // 1 or 2 char tokens
+        case "!":
+            addToken(try match("=") ? .bangEqual : .bang)
+        case "=":
+            addToken(try match("=") ? .equalEqual : .equal)
+        case "<":
+            addToken(try match("=") ? .lessEqual : .less)
+        case ">":
+            addToken(try match("=") ? .greaterEqual : .greater)
+
         default:
             throw KrustError(line: line, message: "Unexpected character \(char)")
         }
@@ -72,9 +84,17 @@ class Scanner {
         return char
     }
 
-    private func addToken(_ type: TokenType, literal: Any? = nil) throws {
+    private func addToken(_ type: TokenType, literal: Any? = nil) {
         let lexeme = current.flatMap { end in source[start..<end] } ?? source[start...finalValidIndex]
         let token = Token(type: type, lexeme: lexeme, literal: literal, line: line)
         tokens.append(token)
+    }
+
+    private func match(_ expected: Character) throws -> Bool {
+        guard let current else { return false }
+        if source[current] != expected { return false }
+
+        _ = try advance()
+        return true
     }
 }
