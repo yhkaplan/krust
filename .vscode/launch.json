@@ -1,0 +1,22 @@
+{
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:krust}",
+      "name": "Debug krust",
+      "program": "${workspaceFolder:krust}/.build/debug/krust",
+      "preLaunchTask": "swift: Build Debug krust"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "${workspaceFolder:krust}",
+      "name": "Release krust",
+      "program": "${workspaceFolder:krust}/.build/release/krust",
+      "preLaunchTask": "swift: Build Release krust"
+    }
+  ]
+}
