@@ -9,6 +9,11 @@ class Scanner {
 
     private var finalValidIndex: String.Index { source.index(before: source.endIndex) }
 
+    private var peek: Character? {
+        guard let current else { return nil }
+        return source[current]
+    }
+
     init(source: String) {
         self.source = source
         current = source.startIndex
@@ -33,6 +38,12 @@ class Scanner {
     private func scanToken() throws {
         let char = try advance()
         switch char {
+        // meaningless trivia
+        case " ", "\r", "\t":
+            ()
+        case "\n":
+            line += 1
+
         // 1 char tokens
         case "(":
             addToken(.leftParen)
@@ -64,12 +75,39 @@ class Scanner {
             addToken(try match("=") ? .lessEqual : .less)
         case ">":
             addToken(try match("=") ? .greaterEqual : .greater)
+        case "/":
+            if try match("/") {
+                // Comment goes until the end of the line
+                while let peek, peek != "\n" {
+                    try advance()
+                }
+            } else {
+                addToken(.slash)
+            }
+
+        // 2 or more
+        case "\"":
+            while let peek, peek != "\"" {
+                if peek == "\n" {
+                    line += 1
+                }
+                try advance()
+            }
+
+            guard let current else { throw KrustError(line: line, message: "Unterminated string") }
+
+            try advance() // handle closing "
+
+            let stringIndices = (start: source.index(after: start), end: source.index(before: current))
+            let string = source[stringIndices.start...stringIndices.end]
+            addToken(.string, literal: string)
 
         default:
             throw KrustError(line: line, message: "Unexpected character \(char)")
         }
     }
 
+    @discardableResult
     private func advance() throws -> Character {
         guard let current else {
             throw KrustError(line: line, message: "Unexpected string index in \(#function)")
@@ -84,7 +122,7 @@ class Scanner {
         return char
     }
 
-    private func addToken(_ type: TokenType, literal: Any? = nil) {
+    private func addToken(_ type: TokenType, literal: Substring? = nil) {
         let lexeme = current.flatMap { end in source[start..<end] } ?? source[start...finalValidIndex]
         let token = Token(type: type, lexeme: lexeme, literal: literal, line: line)
         tokens.append(token)
@@ -94,7 +132,7 @@ class Scanner {
         guard let current else { return false }
         if source[current] != expected { return false }
 
-        _ = try advance()
+        try advance()
         return true
     }
 }
