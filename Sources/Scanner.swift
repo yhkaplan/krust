@@ -14,6 +14,11 @@ class Scanner {
         return source[current]
     }
 
+    private var peekNext: Character? {
+        guard let current, current < finalValidIndex else { return nil }
+        return source[source.index(after: current)]
+    }
+
     init(source: String) {
         self.source = source
         current = source.startIndex
@@ -103,7 +108,11 @@ class Scanner {
             addToken(.string, literal: string)
 
         default:
-            throw KrustError(line: line, message: "Unexpected character \(char)")
+            if char.isNumber {
+                try handleNumberLiteral()
+            } else {
+                throw KrustError(line: line, message: "Unexpected character \(char)")
+            }
         }
     }
 
@@ -134,5 +143,26 @@ class Scanner {
 
         try advance()
         return true
+    }
+
+    private func handleNumberLiteral() throws {
+        while let peek, peek.isNumber {
+            try advance()
+        }
+
+        if peek == ".", let peekNext, peekNext.isNumber {
+            // consume the .
+            try advance()
+
+            while let peek, peek.isNumber {
+                try advance()
+            }
+        }
+
+        let end = current ?? finalValidIndex
+        let number = source[start...end]
+        guard let numberLiteral = Double(number) else { throw KrustError(line: line, message: "Invalid number literal from \(number)") }
+
+        addToken(.number, literal: "\(numberLiteral)")
     }
 }

@@ -10,6 +10,7 @@ do {
 enum KrustCLIError: Error {
     case invalidArguments
 }
+
 struct KrustError: LocalizedError {
     let line: Int
     let message: String
