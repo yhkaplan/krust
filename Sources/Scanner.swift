@@ -7,6 +7,25 @@ class Scanner {
     private var current: String.Index?
     private var line = 1
 
+    private let keywords: [String.SubSequence: TokenType] = [
+        "and": .and,
+        "class": .class,
+        "else": .else,
+        "false": .false,
+        "for": .for,
+        "fn": .fn,
+        "if": .if,
+        "nil": .nil,
+        "or": .or,
+        "print": .print,
+        "return": .return,
+        "super": .super,
+        "this": .this,
+        "true": .true,
+        "var": .var,
+        "while": .while
+    ]
+
     private var finalValidIndex: String.Index { source.index(before: source.endIndex) }
 
     private var peek: Character? {
@@ -110,6 +129,8 @@ class Scanner {
         default:
             if char.isNumber {
                 try handleNumberLiteral()
+            } else if char.isLetter || char == "_" {
+                try handleIdentifier()
             } else {
                 throw KrustError(line: line, message: "Unexpected character \(char)")
             }
@@ -164,5 +185,15 @@ class Scanner {
         guard let numberLiteral = Double(number) else { throw KrustError(line: line, message: "Invalid number literal from \(number)") }
 
         addToken(.number, literal: "\(numberLiteral)")
+    }
+
+    private func handleIdentifier() throws {
+        while let peek, (peek.isLetter || peek.isNumber || peek == "_") {
+            try advance()
+        }
+
+        let lexeme = source[start...(current ?? finalValidIndex)]
+        let type = keywords[lexeme, default: .identifier]
+        addToken(type)
     }
 }
