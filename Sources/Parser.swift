@@ -1,5 +1,7 @@
 /// Recursive decent parser
 final class Parser {
+    struct ParserError: Error {}
+
     private let tokens: [Token]
     private var currentIndex = 0
 
@@ -125,25 +127,18 @@ final class Parser {
             return Expr.Grouping(expression: expr)
         }
 
-        throw makeError(withToken: peek, errorMessage: "Expected expression")
+        throw makeError(withToken: peek, message: "Expected expression")
     }
 
     @discardableResult
     private func consume(_ type: TokenType, errorMessage: String) throws -> Token {
         if check(type) { return try advance() }
-        throw makeError(withToken: peek, errorMessage: errorMessage)
+        throw makeError(withToken: peek, message: errorMessage)
     }
 
-    // TODO: implement error handling here as per https://craftinginterpreters.com/parsing-expressions.html#syntax-errors
-    // TODO: temp?
-    // TODO: typed throws?
-    struct ParserError: Error {
-//        let line: Int
-//        let message: String
-    }
-
-    private func makeError(withToken token: Token, errorMessage: String) -> Error {
-        ParserError()
+    private func makeError(withToken token: Token, message: String) -> Error {
+        ErrorReporter.reportError(token: token, message: message)
+        return ParserError()
     }
 
     private func synchronize() throws {

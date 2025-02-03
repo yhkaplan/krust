@@ -38,7 +38,7 @@ func runPrompt() throws {
         print("> ", terminator: "")
         guard let line = readLine() else { break prompt }
         switch line {
-        case ":exit\n", "e:", ":quit", ":q":
+        case ":exit", "e:", ":quit", ":q":
             break prompt
         default:
             try run(line)
