@@ -23,7 +23,7 @@ class Scanner {
         "this": .this,
         "true": .true,
         "var": .var,
-        "while": .while
+        "while": .while,
     ]
 
     private var finalValidIndex: String.Index { source.index(before: source.endIndex) }
@@ -92,13 +92,13 @@ class Scanner {
 
         // 1 or 2 char tokens
         case "!":
-            addToken(try match("=") ? .bangEqual : .bang)
+            try addToken(match("=") ? .bangEqual : .bang)
         case "=":
-            addToken(try match("=") ? .equalEqual : .equal)
+            try addToken(match("=") ? .equalEqual : .equal)
         case "<":
-            addToken(try match("=") ? .lessEqual : .less)
+            try addToken(match("=") ? .lessEqual : .less)
         case ">":
-            addToken(try match("=") ? .greaterEqual : .greater)
+            try addToken(match("=") ? .greaterEqual : .greater)
         case "/":
             if try match("/") {
                 // Comment goes until the end of the line
@@ -180,15 +180,14 @@ class Scanner {
             }
         }
 
-        let end = current ?? finalValidIndex
-        let number = source[start...end]
+        let number = current.flatMap { source[start..<$0] } ?? source[start...finalValidIndex]
         guard let numberLiteral = Double(number) else { throw KrustError(line: line, message: "Invalid number literal from \(number)") }
 
         addToken(.number, literal: "\(numberLiteral)")
     }
 
     private func handleIdentifier() throws {
-        while let peek, (peek.isLetter || peek.isNumber || peek == "_") {
+        while let peek, peek.isLetter || peek.isNumber || peek == "_" {
             try advance()
         }
 

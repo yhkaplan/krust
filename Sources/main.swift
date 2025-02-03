@@ -58,4 +58,10 @@ func run(_ source: String) throws {
     for token in tokens {
         print(token)
     }
+    let parser = Parser(tokens: tokens)
+    guard let expr = parser.parse() else { return }
+
+    // TODO: stop if there was a syntaxError (hadError == true)
+
+    print(ASTPrinter().print(expr))
 }
