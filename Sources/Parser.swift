@@ -38,7 +38,7 @@ final class Parser {
         while try match(.bangEqual, .equalEqual) {
             let `operator` = previous
             let right = try comparison()
-            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
+            expr = ExprBinary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
@@ -71,7 +71,7 @@ final class Parser {
         while try match(.greater, .greaterEqual, .less, .lessEqual) {
             let `operator` = previous
             let right = try term()
-            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
+            expr = ExprBinary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
@@ -84,7 +84,7 @@ final class Parser {
         while try match(.minus, .plus) {
             let `operator` = previous
             let right = try factor()
-            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
+            expr = ExprBinary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
@@ -96,7 +96,7 @@ final class Parser {
         while try match(.slash, .star) {
             let `operator` = previous
             let right = try unary()
-            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
+            expr = ExprBinary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
@@ -106,16 +106,16 @@ final class Parser {
         if try match(.bang, .minus) {
             let `operator` = previous
             let right = try unary()
-            return Expr.Unary(operator: `operator`, right: right)
+            return ExprUnary(operator: `operator`, right: right)
         }
 
         return try primary()
     }
 
     private func primary() throws -> Expr {
-        if try match(.false) { return Expr.Literal(value: .boolean(false)) }
-        if try match(.true) { return Expr.Literal(value: .boolean(true)) }
-        if try match(.nil) { return Expr.Literal(value: .nil) }
+        if try match(.false) { return ExprLiteral(value: .boolean(false)) }
+        if try match(.true) { return ExprLiteral(value: .boolean(true)) }
+        if try match(.nil) { return ExprLiteral(value: .nil) }
 
         if try match(.number, .string) {
             guard let previousLiteral = previous.literal else {
@@ -123,7 +123,7 @@ final class Parser {
             }
             switch previousLiteral {
             case .number, .string:
-                return Expr.Literal(value: previousLiteral)
+                return ExprLiteral(value: previousLiteral)
             default:
                 throw makeError(withToken: previous, message: "Unexpected token literal")
             }
@@ -132,7 +132,7 @@ final class Parser {
         if try match(.leftParen) {
             let expr = try expression()
             try consume(.rightParen, errorMessage: "Expect ')' after expression.")
-            return Expr.Grouping(expression: expr)
+            return ExprGrouping(expression: expr)
         }
 
         throw makeError(withToken: peek, message: "Expected expression")

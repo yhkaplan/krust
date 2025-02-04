@@ -1,21 +1,21 @@
-class ASTPrinter: Visitor<String> {
+class ASTPrinter: ExprVisitor {
     func print(_ expr: Expr) -> String {
         try! expr.accept(self)
     }
 
-    override func visitBinaryExpr(_ expr: Expr.Binary) -> String {
+    func visitBinaryExpr(_ expr: ExprBinary) -> String {
         parenthesize(name: expr.operator.lexeme, exprs: expr.left, expr.right)
     }
 
-    override func visitGroupingExpr(_ expr: Expr.Grouping) -> String {
+    func visitGroupingExpr(_ expr: ExprGrouping) -> String {
         parenthesize(name: "group", exprs: expr.expression)
     }
 
-    override func visitLiteralExpr(_ expr: Expr.Literal) -> String {
+    func visitLiteralExpr(_ expr: ExprLiteral) -> String {
         "\(expr.value)"
     }
 
-    override func visitUnaryExpr(_ expr: Expr.Unary) -> String {
+    func visitUnaryExpr(_ expr: ExprUnary) -> String {
         parenthesize(name: expr.operator.lexeme, exprs: expr.right)
     }
 

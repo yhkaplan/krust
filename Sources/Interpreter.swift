@@ -3,7 +3,7 @@ struct KrustRuntimeError: Error {
     let message: String
 }
 
-final class Interpreter: Visitor<LiteralValue> {
+final class Interpreter {
     func interpret(_ expr: Expr) {
         do {
             let value = try evaluate(expr)
@@ -14,16 +14,18 @@ final class Interpreter: Visitor<LiteralValue> {
             fatalError("Unknown error \(error)")
         }
     }
+}
 
-    override func visitLiteralExpr(_ expr: Expr.Literal) throws -> LiteralValue {
+extension Interpreter: ExprVisitor {
+    func visitLiteralExpr(_ expr: ExprLiteral) throws -> LiteralValue {
         expr.value
     }
 
-    override func visitGroupingExpr(_ expr: Expr.Grouping) throws -> LiteralValue {
+    func visitGroupingExpr(_ expr: ExprGrouping) throws -> LiteralValue {
         try evaluate(expr.expression)
     }
 
-    override func visitUnaryExpr(_ expr: Expr.Unary) throws -> LiteralValue {
+    func visitUnaryExpr(_ expr: ExprUnary) throws -> LiteralValue {
         let right = try evaluate(expr.right)
 
         switch (expr.operator.type, right) {
@@ -36,7 +38,7 @@ final class Interpreter: Visitor<LiteralValue> {
         }
     }
 
-    override func visitBinaryExpr(_ expr: Expr.Binary) throws -> LiteralValue {
+    func visitBinaryExpr(_ expr: ExprBinary) throws -> LiteralValue {
         let left = try evaluate(expr.left)
         let right = try evaluate(expr.right)
 

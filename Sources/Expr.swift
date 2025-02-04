@@ -1,59 +1,66 @@
-class Expr {
-    func accept<T>(_: Visitor<T>) throws -> T {
-        fatalError()
+protocol ExprVisitor {
+    associatedtype ReturnType // TODO: constrain this?
+
+    func visitBinaryExpr(_ expr: ExprBinary) throws -> ReturnType
+    func visitGroupingExpr(_ expr: ExprGrouping) throws -> ReturnType
+    func visitLiteralExpr(_ expr: ExprLiteral) throws -> ReturnType
+    func visitUnaryExpr(_ expr: ExprUnary) throws -> ReturnType
+}
+
+protocol Expr {
+    func accept<V: ExprVisitor>(_ visitor: V) throws -> V.ReturnType
+}
+
+class ExprBinary: Expr {
+    let left: Expr
+    let `operator`: Token
+    let right: Expr
+
+    init(left: Expr, operator: Token, right: Expr) {
+        self.left = left
+        self.operator = `operator`
+        self.right = right
     }
 
-    class Binary: Expr {
-        let left: Expr
-        let `operator`: Token
-        let right: Expr
+    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
+        try visitor.visitBinaryExpr(self)
+    }
+}
 
-        init(left: Expr, operator: Token, right: Expr) {
-            self.left = left
-            self.operator = `operator`
-            self.right = right
-        }
+class ExprGrouping: Expr {
+    let expression: Expr
 
-        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
-            try visitor.visitBinaryExpr(self)
-        }
+    init(expression: Expr) {
+        self.expression = expression
     }
 
-    class Grouping: Expr {
-        let expression: Expr
+    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
+        try visitor.visitGroupingExpr(self)
+    }
+}
 
-        init(expression: Expr) {
-            self.expression = expression
-        }
+class ExprLiteral: Expr {
+    let value: LiteralValue
 
-        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
-            try visitor.visitGroupingExpr(self)
-        }
+    init(value: LiteralValue) {
+        self.value = value
     }
 
-    class Literal: Expr {
-        let value: LiteralValue
+    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
+        try visitor.visitLiteralExpr(self)
+    }
+}
 
-        init(value: LiteralValue) {
-            self.value = value
-        }
+class ExprUnary: Expr {
+    let `operator`: Token
+    let right: Expr
 
-        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
-            try visitor.visitLiteralExpr(self)
-        }
+    init(operator: Token, right: Expr) {
+        self.right = right
+        self.operator = `operator`
     }
 
-    class Unary: Expr {
-        let `operator`: Token
-        let right: Expr
-
-        init(operator: Token, right: Expr) {
-            self.right = right
-            self.operator = `operator`
-        }
-
-        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
-            try visitor.visitUnaryExpr(self)
-        }
+    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
+        try visitor.visitUnaryExpr(self)
     }
 }
