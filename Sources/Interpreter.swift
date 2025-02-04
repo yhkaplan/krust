@@ -73,6 +73,7 @@ final class Interpreter: Visitor<LiteralValue> {
         if case let .number(leftValue) = left, case let .number(rightValue) = right {
             return switch expr.operator.type {
             case .minus: .number(leftValue - rightValue)
+            case .slash where rightValue == 0: throw KrustRuntimeError(token: expr.operator, message: "Attempted division by zero")
             case .slash: .number(leftValue / rightValue)
             case .star: .number(leftValue * rightValue)
             case .plus: .number(leftValue + rightValue)
