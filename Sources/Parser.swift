@@ -21,7 +21,7 @@ final class Parser {
         self.tokens = tokens
     }
 
-    func parse() -> Expr? {
+    func parse() -> Expr.Expr? {
         do {
             return try expression()
         } catch {
@@ -30,15 +30,15 @@ final class Parser {
         }
     }
 
-    private func expression() throws -> Expr { try equality() }
+    private func expression() throws -> Expr.Expr { try equality() }
 
-    private func equality() throws -> Expr {
+    private func equality() throws -> Expr.Expr {
         var expr = try comparison()
 
         while try match(.bangEqual, .equalEqual) {
             let `operator` = previous
             let right = try comparison()
-            expr = ExprBinary(left: expr, operator: `operator`, right: right)
+            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
@@ -65,57 +65,57 @@ final class Parser {
         return previous
     }
 
-    private func comparison() throws -> Expr {
+    private func comparison() throws -> Expr.Expr {
         var expr = try term()
 
         while try match(.greater, .greaterEqual, .less, .lessEqual) {
             let `operator` = previous
             let right = try term()
-            expr = ExprBinary(left: expr, operator: `operator`, right: right)
+            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
     }
 
     // TODO: refactor code with higher order func
-    private func term() throws -> Expr {
+    private func term() throws -> Expr.Expr {
         var expr = try factor()
 
         while try match(.minus, .plus) {
             let `operator` = previous
             let right = try factor()
-            expr = ExprBinary(left: expr, operator: `operator`, right: right)
+            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
     }
 
-    private func factor() throws -> Expr {
+    private func factor() throws -> Expr.Expr {
         var expr = try unary()
 
         while try match(.slash, .star) {
             let `operator` = previous
             let right = try unary()
-            expr = ExprBinary(left: expr, operator: `operator`, right: right)
+            expr = Expr.Binary(left: expr, operator: `operator`, right: right)
         }
 
         return expr
     }
 
-    private func unary() throws -> Expr {
+    private func unary() throws -> Expr.Expr {
         if try match(.bang, .minus) {
             let `operator` = previous
             let right = try unary()
-            return ExprUnary(operator: `operator`, right: right)
+            return Expr.Unary(operator: `operator`, right: right)
         }
 
         return try primary()
     }
 
-    private func primary() throws -> Expr {
-        if try match(.false) { return ExprLiteral(value: .boolean(false)) }
-        if try match(.true) { return ExprLiteral(value: .boolean(true)) }
-        if try match(.nil) { return ExprLiteral(value: .nil) }
+    private func primary() throws -> Expr.Expr {
+        if try match(.false) { return Expr.Literal(value: .boolean(false)) }
+        if try match(.true) { return Expr.Literal(value: .boolean(true)) }
+        if try match(.nil) { return Expr.Literal(value: .nil) }
 
         if try match(.number, .string) {
             guard let previousLiteral = previous.literal else {
@@ -123,7 +123,7 @@ final class Parser {
             }
             switch previousLiteral {
             case .number, .string:
-                return ExprLiteral(value: previousLiteral)
+                return Expr.Literal(value: previousLiteral)
             default:
                 throw makeError(withToken: previous, message: "Unexpected token literal")
             }
@@ -132,7 +132,7 @@ final class Parser {
         if try match(.leftParen) {
             let expr = try expression()
             try consume(.rightParen, errorMessage: "Expect ')' after expression.")
-            return ExprGrouping(expression: expr)
+            return Expr.Grouping(expression: expr)
         }
 
         throw makeError(withToken: peek, message: "Expected expression")

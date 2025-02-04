@@ -4,7 +4,7 @@ struct KrustRuntimeError: Error {
 }
 
 final class Interpreter {
-    func interpret(_ expr: Expr) {
+    func interpret(_ expr: Expr.Expr) {
         do {
             let value = try evaluate(expr)
             print(value)
@@ -16,16 +16,16 @@ final class Interpreter {
     }
 }
 
-extension Interpreter: ExprVisitor {
-    func visitLiteralExpr(_ expr: ExprLiteral) throws -> LiteralValue {
+extension Interpreter: Expr.Visitor {
+    func visitLiteralExpr(_ expr: Expr.Literal) throws -> LiteralValue {
         expr.value
     }
 
-    func visitGroupingExpr(_ expr: ExprGrouping) throws -> LiteralValue {
+    func visitGroupingExpr(_ expr: Expr.Grouping) throws -> LiteralValue {
         try evaluate(expr.expression)
     }
 
-    func visitUnaryExpr(_ expr: ExprUnary) throws -> LiteralValue {
+    func visitUnaryExpr(_ expr: Expr.Unary) throws -> LiteralValue {
         let right = try evaluate(expr.right)
 
         switch (expr.operator.type, right) {
@@ -38,7 +38,7 @@ extension Interpreter: ExprVisitor {
         }
     }
 
-    func visitBinaryExpr(_ expr: ExprBinary) throws -> LiteralValue {
+    func visitBinaryExpr(_ expr: Expr.Binary) throws -> LiteralValue {
         let left = try evaluate(expr.left)
         let right = try evaluate(expr.right)
 
@@ -106,7 +106,7 @@ extension Interpreter: ExprVisitor {
         }
     }
 
-    private func evaluate(_ expr: Expr) throws -> LiteralValue {
+    private func evaluate(_ expr: Expr.Expr) throws -> LiteralValue {
         try expr.accept(self)
     }
 }

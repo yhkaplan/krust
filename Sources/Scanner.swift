@@ -67,7 +67,6 @@ class Scanner {
             ()
         case "\n":
             line += 1
-
         // 1 char tokens
         case "(":
             addToken(.leftParen)
@@ -89,7 +88,6 @@ class Scanner {
             addToken(.semicolon)
         case "*":
             addToken(.star)
-
         // 1 or 2 char tokens
         case "!":
             try addToken(match("=") ? .bangEqual : .bang)
@@ -108,7 +106,6 @@ class Scanner {
             } else {
                 addToken(.slash)
             }
-
         // 2 or more
         case "\"":
             while let peek, peek != "\"" {

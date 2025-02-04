@@ -1,66 +1,50 @@
-protocol ExprVisitor {
-    associatedtype ReturnType // TODO: constrain this?
+enum Expr {
+    protocol Visitor {
+        associatedtype ReturnType // TODO: constrain this?
 
-    func visitBinaryExpr(_ expr: ExprBinary) throws -> ReturnType
-    func visitGroupingExpr(_ expr: ExprGrouping) throws -> ReturnType
-    func visitLiteralExpr(_ expr: ExprLiteral) throws -> ReturnType
-    func visitUnaryExpr(_ expr: ExprUnary) throws -> ReturnType
-}
-
-protocol Expr {
-    func accept<V: ExprVisitor>(_ visitor: V) throws -> V.ReturnType
-}
-
-class ExprBinary: Expr {
-    let left: Expr
-    let `operator`: Token
-    let right: Expr
-
-    init(left: Expr, operator: Token, right: Expr) {
-        self.left = left
-        self.operator = `operator`
-        self.right = right
+        func visitBinaryExpr(_ expr: Binary) throws -> ReturnType
+        func visitGroupingExpr(_ expr: Grouping) throws -> ReturnType
+        func visitLiteralExpr(_ expr: Literal) throws -> ReturnType
+        func visitUnaryExpr(_ expr: Unary) throws -> ReturnType
     }
 
-    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
-        try visitor.visitBinaryExpr(self)
-    }
-}
-
-class ExprGrouping: Expr {
-    let expression: Expr
-
-    init(expression: Expr) {
-        self.expression = expression
+    // TODO: rename?
+    protocol Expr {
+        func accept<V: Visitor>(_ visitor: V) throws -> V.ReturnType
     }
 
-    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
-        try visitor.visitGroupingExpr(self)
-    }
-}
+    struct Binary: Expr {
+        let left: Expr
+        let `operator`: Token
+        let right: Expr
 
-class ExprLiteral: Expr {
-    let value: LiteralValue
-
-    init(value: LiteralValue) {
-        self.value = value
+        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+            try visitor.visitBinaryExpr(self)
+        }
     }
 
-    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
-        try visitor.visitLiteralExpr(self)
-    }
-}
+    struct Grouping: Expr {
+        let expression: Expr
 
-class ExprUnary: Expr {
-    let `operator`: Token
-    let right: Expr
-
-    init(operator: Token, right: Expr) {
-        self.right = right
-        self.operator = `operator`
+        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+            try visitor.visitGroupingExpr(self)
+        }
     }
 
-    func accept<V>(_ visitor: V) throws -> V.ReturnType where V: ExprVisitor {
-        try visitor.visitUnaryExpr(self)
+    struct Literal: Expr {
+        let value: LiteralValue
+
+        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+            try visitor.visitLiteralExpr(self)
+        }
+    }
+
+    struct Unary: Expr {
+        let `operator`: Token
+        let right: Expr
+
+        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+            try visitor.visitUnaryExpr(self)
+        }
     }
 }
