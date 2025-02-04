@@ -124,8 +124,7 @@ class Scanner {
 
             let stringIndices = (start: source.index(after: start), end: source.index(before: current))
             let string = source[stringIndices.start...stringIndices.end]
-            addToken(.string, literal: string)
-
+            addToken(.string, literal: .string(String(string)))
         default:
             if char.isNumber {
                 try handleNumberLiteral()
@@ -152,7 +151,7 @@ class Scanner {
         return char
     }
 
-    private func addToken(_ type: TokenType, literal: Substring? = nil) {
+    private func addToken(_ type: TokenType, literal: LiteralValue? = nil) {
         let lexeme = current.flatMap { end in source[start..<end] } ?? source[start...finalValidIndex]
         let token = Token(type: type, lexeme: lexeme, literal: literal, line: line)
         tokens.append(token)
@@ -183,7 +182,7 @@ class Scanner {
         let number = current.flatMap { source[start..<$0] } ?? source[start...finalValidIndex]
         guard let numberLiteral = Double(number) else { throw KrustError(line: line, message: "Invalid number literal from \(number)") }
 
-        addToken(.number, literal: "\(numberLiteral)")
+        addToken(.number, literal: .number(numberLiteral))
     }
 
     private func handleIdentifier() throws {

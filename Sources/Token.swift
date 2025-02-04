@@ -1,10 +1,10 @@
 struct Token: CustomDebugStringConvertible {
     let type: TokenType
     let lexeme: String.SubSequence
-    let literal: Substring?
+    let literal: LiteralValue?
     let line: Int
 
     var debugDescription: String {
-        "\(type) \(lexeme) \(literal ?? "")"
+        "\(type) \(lexeme) \(String(describing: literal))"
     }
 }

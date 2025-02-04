@@ -113,12 +113,20 @@ final class Parser {
     }
 
     private func primary() throws -> Expr {
-        if try match(.false) { return Expr.Literal(value: false) }
-        if try match(.true) { return Expr.Literal(value: true) }
-        if try match(.nil) { return Expr.Literal(value: nil) }
+        if try match(.false) { return Expr.Literal(value: .boolean(false)) }
+        if try match(.true) { return Expr.Literal(value: .boolean(true)) }
+        if try match(.nil) { return Expr.Literal(value: .nil) }
 
         if try match(.number, .string) {
-            return Expr.Literal(value: previous.literal)
+            guard let previousLiteral = previous.literal else {
+                throw makeError(withToken: previous, message: "Literal token missing value")
+            }
+            switch previousLiteral {
+            case .number, .string:
+                return Expr.Literal(value: previousLiteral)
+            default:
+                throw makeError(withToken: previous, message: "Unexpected token literal")
+            }
         }
 
         if try match(.leftParen) {

@@ -1,6 +1,5 @@
-// TODO: rewrite as protocols and structs?
 class Expr {
-    func accept<T>(_: Visitor<T>) -> T {
+    func accept<T>(_: Visitor<T>) throws -> T {
         fatalError()
     }
 
@@ -15,8 +14,8 @@ class Expr {
             self.right = right
         }
 
-        override func accept<T>(_ visitor: Visitor<T>) -> T {
-            visitor.visitBinaryExpr(self)
+        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
+            try visitor.visitBinaryExpr(self)
         }
     }
 
@@ -27,20 +26,20 @@ class Expr {
             self.expression = expression
         }
 
-        override func accept<T>(_ visitor: Visitor<T>) -> T {
-            visitor.visitGroupingExpr(self)
+        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
+            try visitor.visitGroupingExpr(self)
         }
     }
 
     class Literal: Expr {
-        let value: Any?
+        let value: LiteralValue
 
-        init(value: Any?) {
+        init(value: LiteralValue) {
             self.value = value
         }
 
-        override func accept<T>(_ visitor: Visitor<T>) -> T {
-            visitor.visitLiteralExpr(self)
+        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
+            try visitor.visitLiteralExpr(self)
         }
     }
 
@@ -53,8 +52,8 @@ class Expr {
             self.operator = `operator`
         }
 
-        override func accept<T>(_ visitor: Visitor<T>) -> T {
-            visitor.visitUnaryExpr(self)
+        override func accept<T>(_ visitor: Visitor<T>) throws -> T {
+            try visitor.visitUnaryExpr(self)
         }
     }
 }

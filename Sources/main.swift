@@ -1,15 +1,7 @@
 import Foundation
 
-do {
-    try main()
-} catch {
-    print("Error: \(error.localizedDescription)")
-    exit(1)
-}
-
-enum KrustCLIError: Error {
-    case invalidArguments
-}
+nonisolated(unsafe) let interpreter = Interpreter() // sharing same instance across repl runs
+main()
 
 struct KrustError: LocalizedError {
     let line: Int
@@ -19,17 +11,32 @@ struct KrustError: LocalizedError {
     }
 }
 
-func main() throws {
+func main() {
     let arguments = CommandLine.arguments
 
     switch arguments.count {
     case 1:
-        try runPrompt()
+        do {
+            try runPrompt()
+        } catch {
+            print(error.localizedDescription)
+        }
     case 2:
-        let script = try readFile(arguments[1])
-        try run(script)
+        do {
+            let script = try readFile(arguments[1])
+            try run(script)
+        } catch {
+            print(error.localizedDescription)
+            if ErrorReporter.hadError {
+                exit(65)
+            }
+            if ErrorReporter.hadRuntimeError {
+                exit(70)
+            }
+        }
     default:
-        throw KrustCLIError.invalidArguments
+        print("Invalid arguments")
+        exit(1)
     }
 }
 
@@ -38,7 +45,7 @@ func runPrompt() throws {
         print("> ", terminator: "")
         guard let line = readLine() else { break prompt }
         switch line {
-        case ":exit", "e:", ":quit", ":q":
+        case ":exit", ":e", ":quit", ":q":
             break prompt
         default:
             try run(line)
@@ -54,14 +61,9 @@ func readFile(_ path: String) throws -> String {
 func run(_ source: String) throws {
     let scanner = Scanner(source: source)
     let tokens = scanner.scanTokens()
-
-    for token in tokens {
-        print(token)
-    }
     let parser = Parser(tokens: tokens)
     guard let expr = parser.parse() else { return }
 
     // TODO: stop if there was a syntaxError (hadError == true)
-
-    print(ASTPrinter().print(expr))
+    interpreter.interpret(expr)
 }
