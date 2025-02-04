@@ -21,13 +21,34 @@ final class Parser {
         self.tokens = tokens
     }
 
-    func parse() -> Expr.Expr? {
+    func parse() -> [Stmt.Stmt] {
         do {
-            return try expression()
+            var statements: [Stmt.Stmt] = []
+            while !isAtEnd {
+                try statements.append(statement())
+            }
+            return statements
         } catch {
-            // TODO: do something with error?
-            return nil
+            // TODO: handle error?
+            return []
         }
+    }
+
+    private func statement() throws -> Stmt.Stmt {
+        if try match(.print) { return try printStatement() }
+        return try expressionStatement()
+    }
+
+    private func printStatement() throws -> Stmt.Stmt {
+        let value = try expression()
+        try consume(.semicolon, errorMessage: "Expect ';' after value")
+        return Stmt.Print(expression: value)
+    }
+
+    private func expressionStatement() throws -> Stmt.Stmt {
+        let expr = try expression()
+        try consume(.semicolon, errorMessage: "Expect ';' after expression")
+        return Stmt.Expression(expression: expr)
     }
 
     private func expression() throws -> Expr.Expr { try equality() }

@@ -4,14 +4,39 @@ struct KrustRuntimeError: Error {
 }
 
 final class Interpreter {
-    func interpret(_ expr: Expr.Expr) {
+    func interpret(_ statements: [Stmt.Stmt]) {
         do {
-            let value = try evaluate(expr)
-            print(value)
+            for stmt in statements {
+                try execute(stmt)
+            }
         } catch let error as KrustRuntimeError {
             ErrorReporter.reportRuntimeError(error)
         } catch {
             fatalError("Unknown error \(error)")
+        }
+    }
+
+    private func execute(_ stmt: Stmt.Stmt) throws {
+        try stmt.accept(self)
+    }
+}
+
+extension Interpreter: Stmt.Visitor {
+    func visitExpressionStmt(_ stmt: Stmt.Expression) throws {
+        _ = try evaluate(stmt.expression)
+    }
+
+    func visitPrintStmt(_ stmt: Stmt.Print) throws {
+        let literal = try evaluate(stmt.expression)
+        switch literal {
+        case let .boolean(value):
+            print(String(value))
+        case .nil:
+            print("nil")
+        case let .number(value):
+            print(String(value))
+        case let .string(value):
+            print(value)
         }
     }
 }

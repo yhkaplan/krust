@@ -187,7 +187,7 @@ class Scanner {
             try advance()
         }
 
-        let lexeme = source[start...(current ?? finalValidIndex)]
+        let lexeme = current.flatMap { source[start..<$0] } ?? source[start...finalValidIndex]
         let type = keywords[lexeme, default: .identifier]
         addToken(type)
     }

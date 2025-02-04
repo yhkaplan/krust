@@ -62,8 +62,8 @@ func run(_ source: String) throws {
     let scanner = Scanner(source: source)
     let tokens = scanner.scanTokens()
     let parser = Parser(tokens: tokens)
-    guard let expr = parser.parse() else { return }
+    let statements = parser.parse()
 
     // TODO: stop if there was a syntaxError (hadError == true)
-    interpreter.interpret(expr)
+    interpreter.interpret(statements)
 }

@@ -1,16 +1,16 @@
 enum Expr {
     protocol Visitor {
-        associatedtype ReturnType // TODO: constrain this?
+        associatedtype ExprReturnType // TODO: constrain this?
 
-        func visitBinaryExpr(_ expr: Binary) throws -> ReturnType
-        func visitGroupingExpr(_ expr: Grouping) throws -> ReturnType
-        func visitLiteralExpr(_ expr: Literal) throws -> ReturnType
-        func visitUnaryExpr(_ expr: Unary) throws -> ReturnType
+        func visitBinaryExpr(_ expr: Binary) throws -> ExprReturnType
+        func visitGroupingExpr(_ expr: Grouping) throws -> ExprReturnType
+        func visitLiteralExpr(_ expr: Literal) throws -> ExprReturnType
+        func visitUnaryExpr(_ expr: Unary) throws -> ExprReturnType
     }
 
     // TODO: rename?
     protocol Expr {
-        func accept<V: Visitor>(_ visitor: V) throws -> V.ReturnType
+        func accept<V: Visitor>(_ visitor: V) throws -> V.ExprReturnType
     }
 
     struct Binary: Expr {
@@ -18,7 +18,7 @@ enum Expr {
         let `operator`: Token
         let right: Expr
 
-        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitBinaryExpr(self)
         }
     }
@@ -26,7 +26,7 @@ enum Expr {
     struct Grouping: Expr {
         let expression: Expr
 
-        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitGroupingExpr(self)
         }
     }
@@ -34,7 +34,7 @@ enum Expr {
     struct Literal: Expr {
         let value: LiteralValue
 
-        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitLiteralExpr(self)
         }
     }
@@ -43,7 +43,7 @@ enum Expr {
         let `operator`: Token
         let right: Expr
 
-        func accept<V>(_ visitor: V) throws -> V.ReturnType where V: Visitor {
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitUnaryExpr(self)
         }
     }
