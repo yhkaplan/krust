@@ -1,4 +1,8 @@
 class ASTPrinter: Expr.Visitor {
+    func visitVariableExpr(_ expr: Expr.Variable) throws -> String {
+        fatalError("Not supported yet")
+    }
+
     func print(_ expr: Expr.Expr) -> String {
         try! expr.accept(self)
     }
@@ -19,7 +23,7 @@ class ASTPrinter: Expr.Visitor {
         parenthesize(name: expr.operator.lexeme, exprs: expr.right)
     }
 
-    private func parenthesize(name: Substring, exprs: Expr.Expr...) -> String {
+    private func parenthesize(name: String, exprs: Expr.Expr...) -> String {
         var result = "(\(name)"
 
         for expr in exprs {

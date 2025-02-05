@@ -25,13 +25,36 @@ final class Parser {
         do {
             var statements: [Stmt.Stmt] = []
             while !isAtEnd {
-                try statements.append(statement())
+                guard let declaration = try declaration() else { continue }
+                statements.append(declaration)
             }
             return statements
         } catch {
             // TODO: handle error?
             return []
         }
+    }
+
+    private func declaration() throws -> Stmt.Stmt? {
+        do {
+            if try match(.var) { return try varDeclaration() }
+
+            return try statement()
+        } catch {
+            try synchronize()
+            return nil
+        }
+    }
+
+    private func varDeclaration() throws -> Stmt.Stmt {
+        let name = try consume(.identifier, errorMessage: "Expect variable name")
+        var initializer: Expr.Expr?
+        if try match(.equal) {
+            initializer = try expression()
+        }
+
+        try consume(.semicolon, errorMessage: "Expect ';' after variable declaration")
+        return Stmt.Var(name: name, initializer: initializer)
     }
 
     private func statement() throws -> Stmt.Stmt {
@@ -148,6 +171,10 @@ final class Parser {
             default:
                 throw makeError(withToken: previous, message: "Unexpected token literal")
             }
+        }
+
+        if try match(.identifier) {
+            return Expr.Variable(name: previous)
         }
 
         if try match(.leftParen) {

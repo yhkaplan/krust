@@ -4,6 +4,7 @@ enum Stmt {
 
         func visitExpressionStmt(_ stmt: Expression) throws -> StmtReturnType
         func visitPrintStmt(_ stmt: Print) throws -> StmtReturnType
+        func visitVarStmt(_ stmt: Var) throws -> StmtReturnType
     }
 
     protocol Stmt {
@@ -23,6 +24,15 @@ enum Stmt {
 
         func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
             try visitor.visitPrintStmt(self)
+        }
+    }
+
+    struct Var: Stmt {
+        let name: Token
+        let initializer: Expr.Expr?
+
+        func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
+            try visitor.visitVarStmt(self)
         }
     }
 }

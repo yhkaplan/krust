@@ -6,9 +6,9 @@ enum Expr {
         func visitGroupingExpr(_ expr: Grouping) throws -> ExprReturnType
         func visitLiteralExpr(_ expr: Literal) throws -> ExprReturnType
         func visitUnaryExpr(_ expr: Unary) throws -> ExprReturnType
+        func visitVariableExpr(_ expr: Variable) throws -> ExprReturnType
     }
 
-    // TODO: rename?
     protocol Expr {
         func accept<V: Visitor>(_ visitor: V) throws -> V.ExprReturnType
     }
@@ -45,6 +45,14 @@ enum Expr {
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitUnaryExpr(self)
+        }
+    }
+
+    struct Variable: Expr {
+        let name: Token
+
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
+            try visitor.visitVariableExpr(self)
         }
     }
 }

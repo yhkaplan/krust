@@ -1,6 +1,6 @@
 struct Token: CustomDebugStringConvertible {
     let type: TokenType
-    let lexeme: String.SubSequence
+    let lexeme: String
     let literal: LiteralValue?
     let line: Int
 
