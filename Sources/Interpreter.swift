@@ -4,7 +4,7 @@ struct KrustRuntimeError: Error {
 }
 
 final class Interpreter {
-    private let environment = Environment()
+    private var environment = Environment()
 
     func interpret(_ statements: [Stmt.Stmt]) {
         do {
@@ -24,6 +24,26 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitBlockStmt(_ stmt: Stmt.Block) throws {
+        executeBlock(statements: stmt.statements, environment: Environment(enclosing: environment))
+    }
+
+    private func executeBlock(statements: [Stmt.Stmt], environment: Environment) {
+        let previousEnvironment = self.environment
+        defer {
+            self.environment = previousEnvironment
+        }
+        do {
+            self.environment = environment
+
+            for stmt in statements {
+                try execute(stmt)
+            }
+        } catch {
+            // do nothing
+        }
+    }
+
     func visitVarStmt(_ stmt: Stmt.Var) throws {
         let value = try stmt.initializer.flatMap { try evaluate($0) } ?? LiteralValue.nil
         environment.define(stmt.name.lexeme, value)

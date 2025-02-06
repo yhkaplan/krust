@@ -59,7 +59,20 @@ final class Parser {
 
     private func statement() throws -> Stmt.Stmt {
         if try match(.print) { return try printStatement() }
+        if try match(.leftBrace) { return Stmt.Block(statements: try block())}
         return try expressionStatement()
+    }
+
+    private func block() throws -> [Stmt.Stmt] {
+        var statements: [Stmt.Stmt] = []
+        while !(check(.rightBrace)) && !isAtEnd {
+            if let dclr = try declaration() {
+                statements.append(dclr)
+            }
+        }
+
+        try consume(.rightBrace, errorMessage: "Expect '}' after block")
+        return statements
     }
 
     private func printStatement() throws -> Stmt.Stmt {
