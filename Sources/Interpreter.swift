@@ -24,6 +24,14 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitIfStmt(_ stmt: Stmt.If) throws {
+        if try isTruthy(evaluate(stmt.condition)) {
+            try execute(stmt.thenBranch)
+        } else if let elseBranch = stmt.elseBranch {
+            try execute(elseBranch)
+        }
+    }
+
     func visitBlockStmt(_ stmt: Stmt.Block) throws {
         executeBlock(statements: stmt.statements, environment: Environment(enclosing: environment))
     }

@@ -58,14 +58,26 @@ final class Parser {
     }
 
     private func statement() throws -> Stmt.Stmt {
+        if try match(.if) { return try ifStatement() }
         if try match(.print) { return try printStatement() }
-        if try match(.leftBrace) { return Stmt.Block(statements: try block())}
+        if try match(.leftBrace) { return try Stmt.Block(statements: block()) }
         return try expressionStatement()
+    }
+
+    private func ifStatement() throws -> Stmt.Stmt {
+        try consume(.leftParen, errorMessage: "Expect '(' after 'if'")
+        let condition = try expression()
+        try consume(.rightParen, errorMessage: "Expect ')' after 'if'")
+
+        let thenBranch = try statement()
+        let elseBranch = try match(.else) ? try statement() : nil
+
+        return Stmt.If(condition: condition, thenBranch: thenBranch, elseBranch: elseBranch)
     }
 
     private func block() throws -> [Stmt.Stmt] {
         var statements: [Stmt.Stmt] = []
-        while !(check(.rightBrace)) && !isAtEnd {
+        while !check(.rightBrace), !isAtEnd {
             if let dclr = try declaration() {
                 statements.append(dclr)
             }
