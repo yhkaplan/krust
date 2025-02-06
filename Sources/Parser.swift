@@ -58,11 +58,45 @@ final class Parser {
     }
 
     private func statement() throws -> Stmt.Stmt {
+        if try match(.for) { return try forStatement() }
         if try match(.if) { return try ifStatement() }
         if try match(.print) { return try printStatement() }
         if try match(.while) { return try whileStatement() }
         if try match(.leftBrace) { return try Stmt.Block(statements: block()) }
         return try expressionStatement()
+    }
+
+    private func forStatement() throws -> Stmt.Stmt {
+        try consume(.leftParen, errorMessage: "Expect '(' after 'for'")
+
+        var initializer: Stmt.Stmt?
+        if try match(.semicolon) {
+            // init is nil
+        } else if try match(.var) {
+            initializer = try varDeclaration()
+        } else {
+            initializer = try expressionStatement()
+        }
+
+        let condition = check(.semicolon) ? Expr.Literal(value: .boolean(true)) : try expression()
+        try consume(.semicolon, errorMessage: "Expect ';' after loop condition")
+
+        let increment = check(.rightParen) ? nil : try expression()
+        try consume(.rightParen, errorMessage: "Expect ')' after for clauses")
+
+        var body = try statement()
+
+        if let increment {
+            body = Stmt.Block(statements: [body, Stmt.Expression(expression: increment)])
+        }
+
+        body = Stmt.While(condition: condition, body: body)
+
+        if let initializer {
+            body = Stmt.Block(statements: [initializer, body])
+        }
+
+        return body
     }
 
     private func whileStatement() throws -> Stmt.Stmt {
