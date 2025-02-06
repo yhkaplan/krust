@@ -74,7 +74,24 @@ final class Parser {
         return Stmt.Expression(expression: expr)
     }
 
-    private func expression() throws -> Expr.Expr { try equality() }
+    private func expression() throws -> Expr.Expr { try assignment() }
+
+    private func assignment() throws -> Expr.Expr {
+        let expr = try equality()
+
+        if try match(.equal) {
+            let equals = previous
+            let value = try assignment()
+
+            if let name = (expr as? Expr.Variable)?.name {
+                return Expr.Assign(name: name, value: value)
+            }
+
+            throw makeError(withToken: equals, message: "Invalid assignement target")
+        }
+
+        return expr
+    }
 
     private func equality() throws -> Expr.Expr {
         var expr = try comparison()

@@ -49,6 +49,12 @@ extension Interpreter: Stmt.Visitor {
 }
 
 extension Interpreter: Expr.Visitor {
+    func visitAssignExpr(_ expr: Expr.Assign) throws -> LiteralValue {
+        let value = try evaluate(expr.value)
+        try environment.assign(expr.name, value)
+        return value
+    }
+
     func visitVariableExpr(_ expr: Expr.Variable) throws -> LiteralValue {
         try environment.get(expr.name)
     }
