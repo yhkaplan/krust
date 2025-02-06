@@ -77,6 +77,18 @@ extension Interpreter: Stmt.Visitor {
 }
 
 extension Interpreter: Expr.Visitor {
+    func visitLogicalExpr(_ expr: Expr.Logical) throws -> LiteralValue {
+        let left = try evaluate(expr.left)
+
+        if expr.operator.type == .or {
+            if isTruthy(left) { return left }
+        } else { // `and`
+            if !isTruthy(left) { return left }
+        }
+
+        return try evaluate(expr.right)
+    }
+
     func visitAssignExpr(_ expr: Expr.Assign) throws -> LiteralValue {
         let value = try evaluate(expr.value)
         try environment.assign(expr.name, value)
@@ -168,7 +180,7 @@ extension Interpreter: Expr.Visitor {
     }
 
     private func isTruthy(_ value: LiteralValue) -> Bool {
-        return switch value {
+        switch value {
         case .nil: false
         case let .boolean(boolValue): boolValue
         case let .string(value): !value.isEmpty

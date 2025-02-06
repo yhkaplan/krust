@@ -102,7 +102,7 @@ final class Parser {
     private func expression() throws -> Expr.Expr { try assignment() }
 
     private func assignment() throws -> Expr.Expr {
-        let expr = try equality()
+        let expr = try or()
 
         if try match(.equal) {
             let equals = previous
@@ -113,6 +113,30 @@ final class Parser {
             }
 
             throw makeError(withToken: equals, message: "Invalid assignement target")
+        }
+
+        return expr
+    }
+
+    private func or() throws -> Expr.Expr {
+        var expr = try and()
+
+        while try match(.or) {
+            let `operator` = previous
+            let right = try and()
+            expr = Expr.Logical(left: expr, operator: `operator`, right: right)
+        }
+
+        return expr
+    }
+
+    private func and() throws -> Expr.Expr {
+        var expr = try equality()
+
+        while try match(.and) {
+            let `operator` = previous
+            let right = try equality()
+            expr = Expr.Logical(left: expr, operator: `operator`, right: right)
         }
 
         return expr
