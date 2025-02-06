@@ -60,8 +60,18 @@ final class Parser {
     private func statement() throws -> Stmt.Stmt {
         if try match(.if) { return try ifStatement() }
         if try match(.print) { return try printStatement() }
+        if try match(.while) { return try whileStatement() }
         if try match(.leftBrace) { return try Stmt.Block(statements: block()) }
         return try expressionStatement()
+    }
+
+    private func whileStatement() throws -> Stmt.Stmt {
+        try consume(.leftParen, errorMessage: "Expect '(' after 'while'")
+        let condition = try expression()
+        try consume(.rightParen, errorMessage: "Expect ')' after 'while'")
+        let body = try statement()
+
+        return Stmt.While(condition: condition, body: body)
     }
 
     private func ifStatement() throws -> Stmt.Stmt {

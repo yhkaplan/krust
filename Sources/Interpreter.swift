@@ -24,6 +24,12 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitWhileStmt(_ stmt: Stmt.While) throws {
+        while try isTruthy(evaluate(stmt.condition)) {
+            try execute(stmt.body)
+        }
+    }
+
     func visitIfStmt(_ stmt: Stmt.If) throws {
         if try isTruthy(evaluate(stmt.condition)) {
             try execute(stmt.thenBranch)

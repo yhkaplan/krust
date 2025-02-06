@@ -7,6 +7,7 @@ enum Stmt {
         func visitVarStmt(_ stmt: Var) throws -> StmtReturnType
         func visitBlockStmt(_ stmt: Block) throws -> StmtReturnType
         func visitIfStmt(_ stmt: If) throws -> StmtReturnType
+        func visitWhileStmt(_ stmt: While) throws -> StmtReturnType
     }
 
     protocol Stmt {
@@ -53,6 +54,15 @@ enum Stmt {
 
         func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
             try visitor.visitIfStmt(self)
+        }
+    }
+
+    struct While: Stmt {
+        let condition: Expr.Expr
+        let body: Stmt
+
+        func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
+            try visitor.visitWhileStmt(self)
         }
     }
 }
