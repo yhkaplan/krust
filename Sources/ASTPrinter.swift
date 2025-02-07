@@ -1,4 +1,8 @@
 class ASTPrinter: Expr.Visitor {
+    func visitCallExpr(_ expr: Expr.Call) throws -> String {
+        fatalError("Not supported yet")
+    }
+
     func visitLogicalExpr(_ expr: Expr.Logical) throws -> String {
         fatalError("Not supported yet")
     }

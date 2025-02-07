@@ -9,6 +9,7 @@ enum Expr {
         func visitVariableExpr(_ expr: Variable) throws -> ExprReturnType
         func visitAssignExpr(_ expr: Assign) throws -> ExprReturnType
         func visitLogicalExpr(_ expr: Logical) throws -> ExprReturnType
+        func visitCallExpr(_ expr: Call) throws -> ExprReturnType
     }
 
     protocol Expr {
@@ -74,6 +75,16 @@ enum Expr {
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitLogicalExpr(self)
+        }
+    }
+
+    struct Call: Expr {
+        let callee: Expr
+        let paren: Token
+        let arguments: [Expr]
+
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
+            try visitor.visitCallExpr(self)
         }
     }
 }

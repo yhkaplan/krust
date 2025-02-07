@@ -37,6 +37,7 @@ final class Parser {
 
     private func declaration() throws -> Stmt.Stmt? {
         do {
+            if try match(.fn) { return try function(kind: "function") }
             if try match(.var) { return try varDeclaration() }
 
             return try statement()
@@ -44,6 +45,27 @@ final class Parser {
             try synchronize()
             return nil
         }
+    }
+
+    private func function(kind: String) throws -> Stmt.Function {
+        let name = try consume(.identifier, errorMessage: "Expect \(kind) name")
+        try consume(.leftParen, errorMessage: "Expect '(' after \(kind) name")
+
+        var params: [Token] = []
+        if !check(.rightParen) {
+            repeat {
+                if params.count >= 255 {
+                    throw makeError(withToken: peek, message: "Can't have more than 255 parameters")
+                }
+
+                try params.append(consume(.identifier, errorMessage: "Expect parameter name"))
+            } while try match(.comma)
+        }
+        try consume(.rightParen, errorMessage: "Expect ')' after parameters")
+
+        try consume(.leftBrace, errorMessage: "Expect '{' before \(kind) body")
+        let body = try block()
+        return Stmt.Function(name: name, params: params, body: body)
     }
 
     private func varDeclaration() throws -> Stmt.Stmt {
@@ -263,7 +285,37 @@ final class Parser {
             return Expr.Unary(operator: `operator`, right: right)
         }
 
-        return try primary()
+        return try call()
+    }
+
+    private func call() throws -> Expr.Expr {
+        var expr = try primary()
+
+        while true {
+            if try match(.leftParen) {
+                expr = try finishCall(expr)
+            } else {
+                break
+            }
+        }
+
+        return expr
+    }
+
+    private func finishCall(_ callee: Expr.Expr) throws -> Expr.Expr {
+        var arguments: [Expr.Expr] = []
+
+        if !check(.rightParen) {
+            repeat {
+                if arguments.count >= 255 {
+                    throw makeError(withToken: peek, message: "Can't have more than 255 arguments")
+                }
+                try arguments.append(expression())
+            } while try match(.comma)
+        }
+
+        let paren = try consume(.rightParen, errorMessage: "Expect ')' after arguments")
+        return Expr.Call(callee: callee, paren: paren, arguments: arguments)
     }
 
     private func primary() throws -> Expr.Expr {

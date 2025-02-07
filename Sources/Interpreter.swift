@@ -1,10 +1,22 @@
+import Foundation
+
 struct KrustRuntimeError: Error {
     let token: Token
     let message: String
 }
 
 final class Interpreter {
-    private var environment = Environment()
+    let globals: Environment
+    private var environment: Environment
+
+    init() {
+        let globals = Environment()
+        globals.define("clock", .callable(KrustNativeFunction(arity: 0, string: "<native fn>", call: { _, _ in
+            .number(Date().timeIntervalSince1970 * 1000)
+        })))
+        self.globals = globals
+        environment = globals
+    }
 
     func interpret(_ statements: [Stmt.Stmt]) {
         do {
@@ -24,6 +36,11 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitFunctionStmt(_ stmt: Stmt.Function) throws {
+        let function = KrustFunction(declaration: stmt)
+        environment.define(stmt.name.lexeme, .callable(function))
+    }
+
     func visitWhileStmt(_ stmt: Stmt.While) throws {
         while try isTruthy(evaluate(stmt.condition)) {
             try execute(stmt.body)
@@ -42,7 +59,7 @@ extension Interpreter: Stmt.Visitor {
         executeBlock(statements: stmt.statements, environment: Environment(enclosing: environment))
     }
 
-    private func executeBlock(statements: [Stmt.Stmt], environment: Environment) {
+    func executeBlock(statements: [Stmt.Stmt], environment: Environment) {
         let previousEnvironment = self.environment
         defer {
             self.environment = previousEnvironment
@@ -78,11 +95,30 @@ extension Interpreter: Stmt.Visitor {
             print(String(value))
         case let .string(value):
             print(value)
+        case let .callable(function):
+            print(String(describing: function))
         }
     }
 }
 
 extension Interpreter: Expr.Visitor {
+    func visitCallExpr(_ expr: Expr.Call) throws -> LiteralValue {
+        let callee = try evaluate(expr.callee)
+
+        var arguments: [LiteralValue] = []
+        for arg in expr.arguments {
+            try arguments.append(evaluate(arg))
+        }
+
+        guard case let .callable(function) = callee else {
+            throw KrustRuntimeError(token: expr.paren, message: "Can only call functions and classes")
+        }
+        guard arguments.count == function.arity else {
+            throw KrustRuntimeError(token: expr.paren, message: "Expected \(function.arity) arguments but got \(arguments.count)")
+        }
+        return function.call(interpreter: self, arguments: arguments)
+    }
+
     func visitLogicalExpr(_ expr: Expr.Logical) throws -> LiteralValue {
         let left = try evaluate(expr.left)
 
@@ -187,7 +223,7 @@ extension Interpreter: Expr.Visitor {
 
     private func isTruthy(_ value: LiteralValue) -> Bool {
         switch value {
-        case .nil: false
+        case .nil, .callable: false
         case let .boolean(boolValue): boolValue
         case let .string(value): !value.isEmpty
         case let .number(numValue): numValue != 0
