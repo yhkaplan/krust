@@ -48,7 +48,7 @@ extension Interpreter: Stmt.Visitor {
     }
 
     func visitFunctionStmt(_ stmt: Stmt.Function) throws {
-        let function = KrustFunction(declaration: stmt)
+        let function = KrustFunction(declaration: stmt, closureEnvironment: environment)
         environment.define(stmt.name.lexeme, .callable(function))
     }
 

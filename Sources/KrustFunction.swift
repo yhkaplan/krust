@@ -1,12 +1,13 @@
 struct KrustFunction: KrustCallable {
     let declaration: Stmt.Function
+    let closureEnvironment: Environment
 
     var arity: Int { declaration.params.count }
 
     var description: String { "<fn \(declaration.name.lexeme)>" }
 
     func call(interpreter: Interpreter, arguments: [LiteralValue]) -> LiteralValue {
-        let environment = Environment(enclosing: interpreter.globals)
+        let environment = Environment(enclosing: closureEnvironment)
         for (i, param) in declaration.params.enumerated() {
             environment.define(param.lexeme, arguments[i])
         }
