@@ -11,7 +11,13 @@ struct KrustFunction: KrustCallable {
             environment.define(param.lexeme, arguments[i])
         }
 
-        interpreter.executeBlock(statements: declaration.body, environment: environment)
+        do {
+            try interpreter.executeBlock(statements: declaration.body, environment: environment)
+        } catch let error as Return { // Hack to unwind the stack
+            return error.value ?? .nil
+        } catch {
+            // TODO: handle error
+        }
         return .nil
     }
 }

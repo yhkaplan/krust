@@ -9,6 +9,7 @@ enum Stmt {
         func visitIfStmt(_ stmt: If) throws -> StmtReturnType
         func visitWhileStmt(_ stmt: While) throws -> StmtReturnType
         func visitFunctionStmt(_ stmt: Function) throws -> StmtReturnType
+        func visitReturnStmt(_ stmt: Return) throws -> StmtReturnType
     }
 
     protocol Stmt {
@@ -74,6 +75,15 @@ enum Stmt {
 
         func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
             try visitor.visitFunctionStmt(self)
+        }
+    }
+
+    struct Return: Stmt {
+        let keyword: Token
+        let value: Expr.Expr?
+
+        func accept<V>(_ visitor: V) throws -> V.StmtReturnType where V: Visitor {
+            try visitor.visitReturnStmt(self)
         }
     }
 }

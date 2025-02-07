@@ -5,6 +5,10 @@ struct KrustRuntimeError: Error {
     let message: String
 }
 
+struct Return: Error {
+    let value: LiteralValue?
+}
+
 final class Interpreter {
     let globals: Environment
     private var environment: Environment
@@ -36,6 +40,13 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitReturnStmt(_ stmt: Stmt.Return) throws {
+        let value = try stmt.value.flatMap { try evaluate($0) }
+
+        // Hacky way to unwind the stack
+        throw Return(value: value)
+    }
+
     func visitFunctionStmt(_ stmt: Stmt.Function) throws {
         let function = KrustFunction(declaration: stmt)
         environment.define(stmt.name.lexeme, .callable(function))
@@ -56,22 +67,18 @@ extension Interpreter: Stmt.Visitor {
     }
 
     func visitBlockStmt(_ stmt: Stmt.Block) throws {
-        executeBlock(statements: stmt.statements, environment: Environment(enclosing: environment))
+        try executeBlock(statements: stmt.statements, environment: Environment(enclosing: environment))
     }
 
-    func executeBlock(statements: [Stmt.Stmt], environment: Environment) {
+    func executeBlock(statements: [Stmt.Stmt], environment: Environment) throws {
         let previousEnvironment = self.environment
         defer {
             self.environment = previousEnvironment
         }
-        do {
-            self.environment = environment
+        self.environment = environment
 
-            for stmt in statements {
-                try execute(stmt)
-            }
-        } catch {
-            // do nothing
+        for stmt in statements {
+            try execute(stmt)
         }
     }
 

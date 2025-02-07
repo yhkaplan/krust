@@ -83,9 +83,18 @@ final class Parser {
         if try match(.for) { return try forStatement() }
         if try match(.if) { return try ifStatement() }
         if try match(.print) { return try printStatement() }
+        if try match(.return) { return try returnStatement() }
         if try match(.while) { return try whileStatement() }
         if try match(.leftBrace) { return try Stmt.Block(statements: block()) }
         return try expressionStatement()
+    }
+
+    private func returnStatement() throws -> Stmt.Stmt {
+        let keyword = previous
+        let value = check(.semicolon) ? nil : try expression()
+
+        try consume(.semicolon, errorMessage: "Expect ';' after return value")
+        return Stmt.Return(keyword: keyword, value: value)
     }
 
     private func forStatement() throws -> Stmt.Stmt {
