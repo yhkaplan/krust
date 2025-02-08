@@ -1,6 +1,8 @@
+import Foundation
+
 enum Expr {
     protocol Visitor {
-        associatedtype ExprReturnType // TODO: constrain this?
+        associatedtype ExprReturnType
 
         func visitBinaryExpr(_ expr: Binary) throws -> ExprReturnType
         func visitGroupingExpr(_ expr: Grouping) throws -> ExprReturnType
@@ -13,10 +15,12 @@ enum Expr {
     }
 
     protocol Expr {
+        var id: UUID { get }
         func accept<V: Visitor>(_ visitor: V) throws -> V.ExprReturnType
     }
 
     struct Binary: Expr {
+        let id = UUID()
         let left: Expr
         let `operator`: Token
         let right: Expr
@@ -27,6 +31,7 @@ enum Expr {
     }
 
     struct Grouping: Expr {
+        let id = UUID()
         let expression: Expr
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
@@ -35,6 +40,7 @@ enum Expr {
     }
 
     struct Literal: Expr {
+        let id = UUID()
         let value: LiteralValue
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
@@ -43,6 +49,7 @@ enum Expr {
     }
 
     struct Unary: Expr {
+        let id = UUID()
         let `operator`: Token
         let right: Expr
 
@@ -52,6 +59,7 @@ enum Expr {
     }
 
     struct Variable: Expr {
+        let id = UUID()
         let name: Token
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
@@ -60,6 +68,7 @@ enum Expr {
     }
 
     struct Assign: Expr {
+        let id = UUID()
         let name: Token
         let value: Expr
 
@@ -69,6 +78,7 @@ enum Expr {
     }
 
     struct Logical: Expr {
+        let id = UUID()
         let left: Expr
         let `operator`: Token
         let right: Expr
@@ -79,6 +89,7 @@ enum Expr {
     }
 
     struct Call: Expr {
+        let id = UUID()
         let callee: Expr
         let paren: Token
         let arguments: [Expr]

@@ -11,6 +11,7 @@ struct Return: Error {
 
 final class Interpreter {
     let globals: Environment
+    private var locals: [UUID: Int] = [:]
     private var environment: Environment
 
     init() {
@@ -34,8 +35,20 @@ final class Interpreter {
         }
     }
 
+    func resolve(_ expr: Expr.Expr, depth: Int) {
+        locals[expr.id] = depth
+    }
+
     private func execute(_ stmt: Stmt.Stmt) throws {
         try stmt.accept(self)
+    }
+
+    private func lookupVariable(withName name: Token, expr: Expr.Expr) throws -> LiteralValue {
+        if let depth = locals[expr.id] {
+            environment.getAt(depth: depth, name: name.lexeme)
+        } else {
+            try globals.get(name)
+        }
     }
 }
 
@@ -140,12 +153,18 @@ extension Interpreter: Expr.Visitor {
 
     func visitAssignExpr(_ expr: Expr.Assign) throws -> LiteralValue {
         let value = try evaluate(expr.value)
-        try environment.assign(expr.name, value)
+
+        if let depth = locals[expr.id] {
+            environment.assign(at: depth, name: expr.name, value: value)
+        } else {
+            try globals.assign(expr.name, value)
+        }
+
         return value
     }
 
     func visitVariableExpr(_ expr: Expr.Variable) throws -> LiteralValue {
-        try environment.get(expr.name)
+        try lookupVariable(withName: expr.name, expr: expr)
     }
 
     func visitLiteralExpr(_ expr: Expr.Literal) throws -> LiteralValue {

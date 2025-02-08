@@ -65,5 +65,10 @@ func run(_ source: String) throws {
     let statements = parser.parse()
 
     // TODO: stop if there was a syntaxError (hadError == true)
+    let resolver = Resolver(interpreter: interpreter)
+    try resolver.resolve(statements)
+    // TODO: Stop if there was a resolution error.
+//    if (hadError) return;
+
     interpreter.interpret(statements)
 }

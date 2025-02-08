@@ -262,7 +262,6 @@ final class Parser {
         return expr
     }
 
-    // TODO: refactor code with higher order func
     private func term() throws -> Expr.Expr {
         var expr = try factor()
 

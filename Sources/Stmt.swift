@@ -1,6 +1,6 @@
 enum Stmt {
     protocol Visitor {
-        associatedtype StmtReturnType // TODO: constrain?
+        associatedtype StmtReturnType
 
         func visitExpressionStmt(_ stmt: Expression) throws -> StmtReturnType
         func visitPrintStmt(_ stmt: Print) throws -> StmtReturnType

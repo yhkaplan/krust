@@ -10,6 +10,10 @@ final class Environment {
         values[name] = value
     }
 
+    func assign(at depth: Int, name: Token, value: LiteralValue) {
+        ancestor(depth)?.values[name.lexeme] = value
+    }
+
     func assign(_ name: Token, _ value: LiteralValue) throws {
         if values[name.lexeme] != nil {
             values[name.lexeme] = value
@@ -18,6 +22,19 @@ final class Environment {
         } else {
             throw KrustRuntimeError(token: name, message: "Undefined variable \(name.lexeme)")
         }
+    }
+
+    func getAt(depth: Int, name: String) -> LiteralValue {
+        ancestor(depth)?.values[name] ?? .nil
+    }
+
+    private func ancestor(_ depth: Int) -> Environment? {
+        var environment: Environment? = self
+        for _ in 0..<depth {
+            environment = environment?.enclosing
+        }
+
+        return environment
     }
 
     func get(_ name: Token) throws -> LiteralValue {
