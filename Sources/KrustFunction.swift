@@ -6,7 +6,7 @@ struct KrustFunction: KrustCallable {
 
     var description: String { "<fn \(declaration.name.lexeme)>" }
 
-    func call(interpreter: Interpreter, arguments: [LiteralValue]) -> LiteralValue {
+    func call(interpreter: Interpreter, arguments: [Value]) -> Value {
         let environment = Environment(enclosing: closureEnvironment)
         for (i, param) in declaration.params.enumerated() {
             environment.define(param.lexeme, arguments[i])

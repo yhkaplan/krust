@@ -44,7 +44,7 @@ enum Expr {
 
     struct Literal: Expr {
         let id = UUID()
-        let value: LiteralValue
+        let value: Value
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitLiteralExpr(self)

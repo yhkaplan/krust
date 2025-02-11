@@ -1,20 +1,20 @@
 final class Environment {
     private var enclosing: Environment?
-    private var values: [String: LiteralValue] = [:]
+    private var values: [String: Value] = [:]
 
     init(enclosing: Environment? = nil) {
         self.enclosing = enclosing
     }
 
-    func define(_ name: String, _ value: LiteralValue) {
+    func define(_ name: String, _ value: Value) {
         values[name] = value
     }
 
-    func assign(at depth: Int, name: Token, value: LiteralValue) {
+    func assign(at depth: Int, name: Token, value: Value) {
         ancestor(depth)?.values[name.lexeme] = value
     }
 
-    func assign(_ name: Token, _ value: LiteralValue) throws {
+    func assign(_ name: Token, _ value: Value) throws {
         if values[name.lexeme] != nil {
             values[name.lexeme] = value
         } else if let enclosing {
@@ -24,7 +24,7 @@ final class Environment {
         }
     }
 
-    func getAt(depth: Int, name: String) -> LiteralValue {
+    func getAt(depth: Int, name: String) -> Value {
         ancestor(depth)?.values[name] ?? .nil
     }
 
@@ -37,7 +37,7 @@ final class Environment {
         return environment
     }
 
-    func get(_ name: Token) throws -> LiteralValue {
+    func get(_ name: Token) throws -> Value {
         if let value = values[name.lexeme] {
             return value
         } else if let value = try enclosing?.get(name) {

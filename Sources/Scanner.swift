@@ -148,7 +148,7 @@ class Scanner {
         return char
     }
 
-    private func addToken(_ type: TokenType, literal: LiteralValue? = nil) {
+    private func addToken(_ type: TokenType, literal: Value? = nil) {
         let lexeme = current.flatMap { end in source[start..<end] } ?? source[start...finalValidIndex]
         let token = Token(type: type, lexeme: String(lexeme), literal: literal, line: line)
         tokens.append(token)

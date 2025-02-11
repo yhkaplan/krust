@@ -1,7 +1,7 @@
 struct Token: CustomDebugStringConvertible {
     let type: TokenType
     let lexeme: String
-    let literal: LiteralValue?
+    let literal: Value?
     let line: Int
 
     var debugDescription: String {

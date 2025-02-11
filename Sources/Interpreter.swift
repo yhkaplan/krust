@@ -6,7 +6,7 @@ struct KrustRuntimeError: Error {
 }
 
 struct Return: Error {
-    let value: LiteralValue?
+    let value: Value?
 }
 
 final class Interpreter {
@@ -43,7 +43,7 @@ final class Interpreter {
         try stmt.accept(self)
     }
 
-    private func lookupVariable(withName name: Token, expr: Expr.Expr) throws -> LiteralValue {
+    private func lookupVariable(withName name: Token, expr: Expr.Expr) throws -> Value {
         if let depth = locals[expr.id] {
             environment.getAt(depth: depth, name: name.lexeme)
         } else {
@@ -53,7 +53,7 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
-    func visitThisExpr(_ expr: Expr.This) throws -> LiteralValue {
+    func visitThisExpr(_ expr: Expr.This) throws -> Value {
         try lookupVariable(withName: expr.keyword, expr: expr)
     }
 
@@ -113,7 +113,7 @@ extension Interpreter: Stmt.Visitor {
     }
 
     func visitVarStmt(_ stmt: Stmt.Var) throws {
-        let value = try stmt.initializer.flatMap { try evaluate($0) } ?? LiteralValue.nil
+        let value = try stmt.initializer.flatMap { try evaluate($0) } ?? Value.nil
         environment.define(stmt.name.lexeme, value)
     }
 
@@ -141,7 +141,7 @@ extension Interpreter: Stmt.Visitor {
 }
 
 extension Interpreter: Expr.Visitor {
-    func visitSetExpr(_ expr: Expr.Set) throws -> LiteralValue {
+    func visitSetExpr(_ expr: Expr.Set) throws -> Value {
         let object = try evaluate(expr.object)
 
         guard case let .classInstance(krustInstance) = object else {
@@ -153,7 +153,7 @@ extension Interpreter: Expr.Visitor {
         return value
     }
 
-    func visitGetExpr(_ expr: Expr.Get) throws -> LiteralValue {
+    func visitGetExpr(_ expr: Expr.Get) throws -> Value {
         let object = try evaluate(expr.object)
         guard case let .classInstance(krustInstance) = object else {
             throw KrustRuntimeError(token: expr.name, message: "Only instances of classes have properties")
@@ -162,10 +162,10 @@ extension Interpreter: Expr.Visitor {
         return try krustInstance.getField(name: expr.name)
     }
 
-    func visitCallExpr(_ expr: Expr.Call) throws -> LiteralValue {
+    func visitCallExpr(_ expr: Expr.Call) throws -> Value {
         let callee = try evaluate(expr.callee)
 
-        var arguments: [LiteralValue] = []
+        var arguments: [Value] = []
         for arg in expr.arguments {
             try arguments.append(evaluate(arg))
         }
@@ -179,7 +179,7 @@ extension Interpreter: Expr.Visitor {
         return function.call(interpreter: self, arguments: arguments)
     }
 
-    func visitLogicalExpr(_ expr: Expr.Logical) throws -> LiteralValue {
+    func visitLogicalExpr(_ expr: Expr.Logical) throws -> Value {
         let left = try evaluate(expr.left)
 
         if expr.operator.type == .or {
@@ -191,7 +191,7 @@ extension Interpreter: Expr.Visitor {
         return try evaluate(expr.right)
     }
 
-    func visitAssignExpr(_ expr: Expr.Assign) throws -> LiteralValue {
+    func visitAssignExpr(_ expr: Expr.Assign) throws -> Value {
         let value = try evaluate(expr.value)
 
         if let depth = locals[expr.id] {
@@ -203,19 +203,19 @@ extension Interpreter: Expr.Visitor {
         return value
     }
 
-    func visitVariableExpr(_ expr: Expr.Variable) throws -> LiteralValue {
+    func visitVariableExpr(_ expr: Expr.Variable) throws -> Value {
         try lookupVariable(withName: expr.name, expr: expr)
     }
 
-    func visitLiteralExpr(_ expr: Expr.Literal) throws -> LiteralValue {
+    func visitLiteralExpr(_ expr: Expr.Literal) throws -> Value {
         expr.value
     }
 
-    func visitGroupingExpr(_ expr: Expr.Grouping) throws -> LiteralValue {
+    func visitGroupingExpr(_ expr: Expr.Grouping) throws -> Value {
         try evaluate(expr.expression)
     }
 
-    func visitUnaryExpr(_ expr: Expr.Unary) throws -> LiteralValue {
+    func visitUnaryExpr(_ expr: Expr.Unary) throws -> Value {
         let right = try evaluate(expr.right)
 
         switch (expr.operator.type, right) {
@@ -228,7 +228,7 @@ extension Interpreter: Expr.Visitor {
         }
     }
 
-    func visitBinaryExpr(_ expr: Expr.Binary) throws -> LiteralValue {
+    func visitBinaryExpr(_ expr: Expr.Binary) throws -> Value {
         let left = try evaluate(expr.left)
         let right = try evaluate(expr.right)
 
@@ -287,7 +287,7 @@ extension Interpreter: Expr.Visitor {
         }
     }
 
-    private func isTruthy(_ value: LiteralValue) -> Bool {
+    private func isTruthy(_ value: Value) -> Bool {
         switch value {
         case .nil, .callable: false
         case .classInstance: false // TODO: support comparing class types and instances
@@ -297,7 +297,7 @@ extension Interpreter: Expr.Visitor {
         }
     }
 
-    private func evaluate(_ expr: Expr.Expr) throws -> LiteralValue {
+    private func evaluate(_ expr: Expr.Expr) throws -> Value {
         try expr.accept(self)
     }
 }

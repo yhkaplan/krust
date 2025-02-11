@@ -15,7 +15,7 @@ final class KrustClass: CustomStringConvertible {
 extension KrustClass: KrustCallable {
     var arity: Int { 0 }
 
-    func call(interpreter: Interpreter, arguments: [LiteralValue]) -> LiteralValue {
+    func call(interpreter: Interpreter, arguments: [Value]) -> Value {
         .classInstance(KrustInstance(krustClass: self))
     }
 }

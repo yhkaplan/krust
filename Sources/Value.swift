@@ -1,5 +1,4 @@
-// TODO: rename?
-enum LiteralValue: @unchecked Sendable {
+enum Value: @unchecked Sendable {
     case number(Double)
     case string(String)
     case boolean(Bool)
