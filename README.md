@@ -17,4 +17,21 @@ fn fib(n) {
 for (var i = 0; i < 20; i = i + 1) {
   print fib(i);
 }
+
+class A {
+  a() {
+    print "super a";
+  }
+  b() {
+    print "super b";
+  }
+}
+
+class B < A {
+  a() { super.a(); print "sub a"; }
+  b() { super.b(); print "sub b"; }
+}
+var b = B();
+b.a();
+b.b();
 ```

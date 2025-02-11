@@ -50,6 +50,13 @@ final class Parser {
 
     private func classDeclaration() throws -> Stmt.Class {
         let name = try consume(.identifier, errorMessage: "Expect class name")
+
+        var superclass: Expr.Variable?
+        if try match(.less) {
+            try consume(.identifier, errorMessage: "Expect superclass name")
+            superclass = Expr.Variable(name: previous)
+        }
+
         try consume(.leftBrace, errorMessage: "Expect '{' before class body")
 
         var methods: [Stmt.Function] = []
@@ -59,7 +66,7 @@ final class Parser {
 
         try consume(.rightBrace, errorMessage: "Expect '}' after class body")
 
-        return Stmt.Class(name: name, superclass: nil, methods: methods)
+        return Stmt.Class(name: name, superclass: superclass, methods: methods)
     }
 
     private func function(kind: String) throws -> Stmt.Function {
@@ -361,6 +368,13 @@ final class Parser {
             default:
                 throw makeError(withToken: previous, message: "Unexpected token literal")
             }
+        }
+
+        if try match(.super) {
+            let keyword = previous
+            try consume(.dot, errorMessage: "Expect '.' after 'super'")
+            let method = try consume(.identifier, errorMessage: "Expect superclass method name")
+            return Expr.Super(keyword: keyword, method: method)
         }
 
         if try match(.this) { return Expr.This(keyword: previous) }

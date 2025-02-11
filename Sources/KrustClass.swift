@@ -1,15 +1,17 @@
 final class KrustClass: CustomStringConvertible {
     let name: String
+    let superclass: KrustClass?
     private var methods: [String: KrustFunction]
 
     var description: String { name }
 
-    init(name: String, methods: [String: KrustFunction] = [:]) {
+    init(name: String, superclass: KrustClass?, methods: [String: KrustFunction] = [:]) {
         self.name = name
+        self.superclass = superclass
         self.methods = methods
     }
 
-    func findMethod(name: String) -> KrustFunction? { methods[name] }
+    func findMethod(name: String) -> KrustFunction? { methods[name] ?? superclass?.findMethod(name: name) }
 }
 
 extension KrustClass: KrustCallable {

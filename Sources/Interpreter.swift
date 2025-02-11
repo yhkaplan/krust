@@ -58,7 +58,20 @@ extension Interpreter: Stmt.Visitor {
     }
 
     func visitClassStmt(_ stmt: Stmt.Class) throws {
+        var superclassClass: KrustClass?
+        if let superclass = stmt.superclass {
+            guard case let .callable(callable) = try evaluate(superclass), let callable = callable as? KrustClass else {
+                throw KrustRuntimeError(token: superclass.name, message: "Superclass must be a class")
+            }
+            superclassClass = callable
+        }
+
         environment.define(stmt.name.lexeme, .nil)
+
+        if let superclassClass {
+            environment = Environment(enclosing: environment)
+            environment.define("super", .callable(superclassClass))
+        }
 
         var methods: [String: KrustFunction] = [:]
         for method in stmt.methods {
@@ -66,7 +79,12 @@ extension Interpreter: Stmt.Visitor {
             methods[method.name.lexeme] = function
         }
 
-        let `class` = KrustClass(name: stmt.name.lexeme, methods: methods)
+        let `class` = KrustClass(name: stmt.name.lexeme, superclass: superclassClass, methods: methods)
+
+        if superclassClass != nil, let enclosingEnvironment = environment.enclosing {
+            environment = enclosingEnvironment
+        }
+
         try environment.assign(stmt.name, .callable(`class`))
     }
 
@@ -142,6 +160,26 @@ extension Interpreter: Stmt.Visitor {
 }
 
 extension Interpreter: Expr.Visitor {
+    func visitSuperExpr(_ expr: Expr.Super) throws -> Value {
+        guard let depth = locals[expr.id] else {
+            throw KrustRuntimeError(token: expr.method, message: "Undefined property '\(expr.method.lexeme)'")
+        }
+        let superclass = environment.getAt(depth: depth, name: "super")
+        guard case let .callable(krustCallable) = superclass, let superclassClass = krustCallable as? KrustClass else {
+            throw KrustRuntimeError(token: expr.method, message: "Undefined property '\(expr.method.lexeme)'")
+        }
+
+        let object = environment.getAt(depth: depth - 1, name: "this")
+        guard case let .classInstance(instance) = object else {
+            throw KrustRuntimeError(token: expr.method, message: "Undefined property '\(expr.method.lexeme)'")
+        }
+
+        guard let method = superclassClass.findMethod(name: expr.method.lexeme) else {
+            throw KrustRuntimeError(token: expr.method, message: "Undefined property '\(expr.method.lexeme)'")
+        }
+        return .callable(method.bind(instance))
+    }
+
     func visitSetExpr(_ expr: Expr.Set) throws -> Value {
         let object = try evaluate(expr.object)
 

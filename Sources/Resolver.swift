@@ -2,7 +2,7 @@ enum FunctionType {
     case function, method, initializer
 }
 
-enum ClassType { case `class` }
+enum ClassType { case `class`, subclass }
 
 final class Resolver {
     private let interpreter: Interpreter
@@ -77,6 +77,15 @@ final class Resolver {
 }
 
 extension Resolver: Expr.Visitor {
+    func visitSuperExpr(_ expr: Expr.Super) throws {
+        if currentClass == nil {
+            ErrorReporter.reportError(token: expr.keyword, message: "Can't use 'super' outside of a class")
+        } else if currentClass != .subclass {
+            ErrorReporter.reportError(token: expr.keyword, message: "Can't use 'super' in a class with no superclass")
+        }
+        resolveLocal(expr: expr, name: expr.keyword)
+    }
+
     func visitThisExpr(_ expr: Expr.This) throws {
         if currentClass == nil {
             ErrorReporter.reportError(token: expr.keyword, message: "Can't use 'this' outside of a class")
@@ -147,6 +156,20 @@ extension Resolver: Stmt.Visitor {
         declare(stmt.name)
         define(stmt.name)
 
+        if let superclass = stmt.superclass, stmt.name.lexeme == superclass.name.lexeme {
+            ErrorReporter.reportError(token: superclass.name, message: "A class can't inherit from itself")
+        }
+
+        if let superclass = stmt.superclass {
+            currentClass = .subclass
+            try resolve(superclass)
+        }
+
+        if stmt.superclass != nil {
+            beginScope()
+            scopes[scopes.count - 1]["super"] = true
+        }
+
         beginScope()
         scopes[scopes.count - 1]["this"] = true
 
@@ -155,6 +178,10 @@ extension Resolver: Stmt.Visitor {
         }
 
         endScope()
+
+        if stmt.superclass != nil {
+            endScope()
+        }
 
         currentClass = enclosingClass
     }
