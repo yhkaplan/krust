@@ -5,5 +5,5 @@ enum LiteralValue: @unchecked Sendable {
     case boolean(Bool)
     case `nil`
     case callable(KrustCallable)
-    // TODO: add Void? or just use nil
+    case classInstance(KrustInstance)
 }

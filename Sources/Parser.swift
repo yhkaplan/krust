@@ -37,6 +37,7 @@ final class Parser {
 
     private func declaration() throws -> Stmt.Stmt? {
         do {
+            if try match(.class) { return try classDeclaration() }
             if try match(.fn) { return try function(kind: "function") }
             if try match(.var) { return try varDeclaration() }
 
@@ -45,6 +46,20 @@ final class Parser {
             try synchronize()
             return nil
         }
+    }
+
+    private func classDeclaration() throws -> Stmt.Class {
+        let name = try consume(.identifier, errorMessage: "Expect class name")
+        try consume(.leftBrace, errorMessage: "Expect '{' before class body")
+
+        var methods: [Stmt.Function] = []
+        while !check(.rightBrace), !isAtEnd {
+            try methods.append(function(kind: "method"))
+        }
+
+        try consume(.rightBrace, errorMessage: "Expect '}' after class body")
+
+        return Stmt.Class(name: name, superclass: nil, methods: methods)
     }
 
     private func function(kind: String) throws -> Stmt.Function {

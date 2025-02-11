@@ -53,6 +53,12 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitClassStmt(_ stmt: Stmt.Class) throws {
+        environment.define(stmt.name.lexeme, .nil)
+        let `class` = KrustClass(name: stmt.name.lexeme)
+        try environment.assign(stmt.name, .callable(`class`))
+    }
+
     func visitReturnStmt(_ stmt: Stmt.Return) throws {
         let value = try stmt.value.flatMap { try evaluate($0) }
 
@@ -117,6 +123,8 @@ extension Interpreter: Stmt.Visitor {
             print(value)
         case let .callable(function):
             print(String(describing: function))
+        case let .classInstance(instance):
+            print(String(describing: instance))
         }
     }
 }
@@ -250,6 +258,7 @@ extension Interpreter: Expr.Visitor {
     private func isTruthy(_ value: LiteralValue) -> Bool {
         switch value {
         case .nil, .callable: false
+        case .classInstance: false // TODO: support comparing class types and instances
         case let .boolean(boolValue): boolValue
         case let .string(value): !value.isEmpty
         case let .number(numValue): numValue != 0
