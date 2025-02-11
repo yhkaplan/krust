@@ -1,11 +1,15 @@
 final class KrustClass: CustomStringConvertible {
     let name: String
-
-    init(name: String) {
-        self.name = name
-    }
+    private var methods: [String: KrustFunction]
 
     var description: String { name }
+
+    init(name: String, methods: [String: KrustFunction] = [:]) {
+        self.name = name
+        self.methods = methods
+    }
+
+    func findMethod(name: String) -> KrustFunction? { methods[name] }
 }
 
 extension KrustClass: KrustCallable {

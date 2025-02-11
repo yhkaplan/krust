@@ -10,10 +10,12 @@ final class KrustInstance: CustomStringConvertible {
     }
 
     func getField(name: Token) throws -> LiteralValue {
-        guard let value = fields[name.lexeme] else {
-            throw KrustRuntimeError(token: name, message: "Undefined property \(name.lexeme)")
+        if let value = fields[name.lexeme] {
+            return value
+        } else if let method = krustClass.findMethod(name: name.lexeme) {
+            return .callable(method)
         }
-        return value
+        throw KrustRuntimeError(token: name, message: "Undefined property \(name.lexeme)")
     }
 
     func setField(name: Token, value: LiteralValue) {

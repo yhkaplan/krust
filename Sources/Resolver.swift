@@ -1,5 +1,5 @@
 enum FunctionType {
-    case function
+    case function, method
 }
 
 final class Resolver {
@@ -131,6 +131,10 @@ extension Resolver: Stmt.Visitor {
     func visitClassStmt(_ stmt: Stmt.Class) throws {
         declare(stmt.name)
         define(stmt.name)
+
+        for method in stmt.methods {
+            try resolveFunction(method, type: .method)
+        }
     }
 
     func visitExpressionStmt(_ stmt: Stmt.Expression) throws {

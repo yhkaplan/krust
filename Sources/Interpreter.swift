@@ -55,7 +55,14 @@ final class Interpreter {
 extension Interpreter: Stmt.Visitor {
     func visitClassStmt(_ stmt: Stmt.Class) throws {
         environment.define(stmt.name.lexeme, .nil)
-        let `class` = KrustClass(name: stmt.name.lexeme)
+
+        var methods: [String: KrustFunction] = [:]
+        for method in stmt.methods {
+            let function = KrustFunction(declaration: method, closureEnvironment: environment)
+            methods[method.name.lexeme] = function
+        }
+
+        let `class` = KrustClass(name: stmt.name.lexeme, methods: methods)
         try environment.assign(stmt.name, .callable(`class`))
     }
 
