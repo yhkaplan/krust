@@ -119,6 +119,15 @@ extension Resolver: Expr.Visitor {
 }
 
 extension Resolver: Stmt.Visitor {
+    func visitSetExpr(_ expr: Expr.Set) throws {
+        try resolve(expr.value)
+        try resolve(expr.object)
+    }
+
+    func visitGetExpr(_ expr: Expr.Get) throws {
+        try resolve(expr.object)
+    }
+
     func visitClassStmt(_ stmt: Stmt.Class) throws {
         declare(stmt.name)
         define(stmt.name)

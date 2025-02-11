@@ -200,6 +200,8 @@ final class Parser {
 
             if let name = (expr as? Expr.Variable)?.name {
                 return Expr.Assign(name: name, value: value)
+            } else if let get = (expr as? Expr.Get) {
+                return Expr.Set(object: get.object, name: get.name, value: value)
             }
 
             throw makeError(withToken: equals, message: "Invalid assignement target")
@@ -317,6 +319,9 @@ final class Parser {
         while true {
             if try match(.leftParen) {
                 expr = try finishCall(expr)
+            } else if try match(.dot) {
+                let name = try consume(.identifier, errorMessage: "Expect property name after '.'")
+                expr = Expr.Get(object: expr, name: name)
             } else {
                 break
             }

@@ -12,6 +12,8 @@ enum Expr {
         func visitAssignExpr(_ expr: Assign) throws -> ExprReturnType
         func visitLogicalExpr(_ expr: Logical) throws -> ExprReturnType
         func visitCallExpr(_ expr: Call) throws -> ExprReturnType
+        func visitGetExpr(_ expr: Get) throws -> ExprReturnType
+        func visitSetExpr(_ expr: Set) throws -> ExprReturnType
     }
 
     protocol Expr {
@@ -96,6 +98,27 @@ enum Expr {
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitCallExpr(self)
+        }
+    }
+
+    struct Get: Expr {
+        let id = UUID()
+        let object: Expr
+        let name: Token
+
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
+            try visitor.visitGetExpr(self)
+        }
+    }
+
+    struct Set: Expr {
+        let id = UUID()
+        let object: Expr
+        let name: Token
+        let value: Expr
+
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
+            try visitor.visitSetExpr(self)
         }
     }
 }

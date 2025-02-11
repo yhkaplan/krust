@@ -130,6 +130,27 @@ extension Interpreter: Stmt.Visitor {
 }
 
 extension Interpreter: Expr.Visitor {
+    func visitSetExpr(_ expr: Expr.Set) throws -> LiteralValue {
+        let object = try evaluate(expr.object)
+
+        guard case let .classInstance(krustInstance) = object else {
+            throw KrustRuntimeError(token: expr.name, message: "Only instances of classes have properties")
+        }
+
+        let value = try evaluate(expr.value)
+        krustInstance.setField(name: expr.name, value: value)
+        return value
+    }
+
+    func visitGetExpr(_ expr: Expr.Get) throws -> LiteralValue {
+        let object = try evaluate(expr.object)
+        guard case let .classInstance(krustInstance) = object else {
+            throw KrustRuntimeError(token: expr.name, message: "Only instances of classes have properties")
+        }
+
+        return try krustInstance.getField(name: expr.name)
+    }
+
     func visitCallExpr(_ expr: Expr.Call) throws -> LiteralValue {
         let callee = try evaluate(expr.callee)
 
