@@ -363,9 +363,9 @@ final class Parser {
             }
         }
 
-        if try match(.identifier) {
-            return Expr.Variable(name: previous)
-        }
+        if try match(.this) { return Expr.This(keyword: previous) }
+
+        if try match(.identifier) { return Expr.Variable(name: previous) }
 
         if try match(.leftParen) {
             let expr = try expression()

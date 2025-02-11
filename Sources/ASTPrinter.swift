@@ -1,4 +1,8 @@
 class ASTPrinter: Expr.Visitor {
+    func visitThisExpr(_ expr: Expr.This) throws -> String {
+        "this"
+    }
+
     func visitGetExpr(_ expr: Expr.Get) throws -> String {
         fatalError("Not supported yet")
     }

@@ -2,10 +2,13 @@ enum FunctionType {
     case function, method
 }
 
+enum ClassType { case `class` }
+
 final class Resolver {
     private let interpreter: Interpreter
     private var scopes: [[String: Bool]] = []
     private var currentFunction: FunctionType?
+    private var currentClass: ClassType?
 
     init(interpreter: Interpreter) {
         self.interpreter = interpreter
@@ -74,6 +77,15 @@ final class Resolver {
 }
 
 extension Resolver: Expr.Visitor {
+    func visitThisExpr(_ expr: Expr.This) throws {
+        if currentClass == nil {
+            ErrorReporter.reportError(token: expr.keyword, message: "Can't use 'this' outside of a class")
+            return
+        }
+
+        resolveLocal(expr: expr, name: expr.keyword)
+    }
+
     func visitBinaryExpr(_ expr: Expr.Binary) throws {
         try resolve(expr.left)
         try resolve(expr.right)
@@ -129,12 +141,22 @@ extension Resolver: Stmt.Visitor {
     }
 
     func visitClassStmt(_ stmt: Stmt.Class) throws {
+        let enclosingClass = currentClass
+        currentClass = .class
+
         declare(stmt.name)
         define(stmt.name)
+
+        beginScope()
+        scopes[scopes.count - 1]["this"] = true
 
         for method in stmt.methods {
             try resolveFunction(method, type: .method)
         }
+
+        endScope()
+
+        currentClass = enclosingClass
     }
 
     func visitExpressionStmt(_ stmt: Stmt.Expression) throws {

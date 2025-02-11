@@ -14,6 +14,7 @@ enum Expr {
         func visitCallExpr(_ expr: Call) throws -> ExprReturnType
         func visitGetExpr(_ expr: Get) throws -> ExprReturnType
         func visitSetExpr(_ expr: Set) throws -> ExprReturnType
+        func visitThisExpr(_ expr: This) throws -> ExprReturnType
     }
 
     protocol Expr {
@@ -119,6 +120,15 @@ enum Expr {
 
         func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
             try visitor.visitSetExpr(self)
+        }
+    }
+
+    struct This: Expr {
+        let id = UUID()
+        let keyword: Token
+
+        func accept<V>(_ visitor: V) throws -> V.ExprReturnType where V: Visitor {
+            try visitor.visitThisExpr(self)
         }
     }
 }

@@ -21,4 +21,10 @@ struct KrustFunction: KrustCallable {
         }
         return .nil
     }
+
+    func bind(_ instance: KrustInstance) -> KrustFunction {
+        let environment = Environment(enclosing: closureEnvironment)
+        environment.define("this", .classInstance(instance))
+        return KrustFunction(declaration: declaration, closureEnvironment: environment)
+    }
 }

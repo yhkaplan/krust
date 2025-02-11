@@ -13,7 +13,7 @@ final class KrustInstance: CustomStringConvertible {
         if let value = fields[name.lexeme] {
             return value
         } else if let method = krustClass.findMethod(name: name.lexeme) {
-            return .callable(method)
+            return .callable(method.bind(self))
         }
         throw KrustRuntimeError(token: name, message: "Undefined property \(name.lexeme)")
     }

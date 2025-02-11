@@ -53,6 +53,10 @@ final class Interpreter {
 }
 
 extension Interpreter: Stmt.Visitor {
+    func visitThisExpr(_ expr: Expr.This) throws -> LiteralValue {
+        try lookupVariable(withName: expr.keyword, expr: expr)
+    }
+
     func visitClassStmt(_ stmt: Stmt.Class) throws {
         environment.define(stmt.name.lexeme, .nil)
 
