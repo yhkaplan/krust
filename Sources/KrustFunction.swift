@@ -1,6 +1,7 @@
 struct KrustFunction: KrustCallable {
     let declaration: Stmt.Function
     let closureEnvironment: Environment
+    let isInitializer: Bool
 
     var arity: Int { declaration.params.count }
 
@@ -15,16 +16,20 @@ struct KrustFunction: KrustCallable {
         do {
             try interpreter.executeBlock(statements: declaration.body, environment: environment)
         } catch let error as Return { // Hack to unwind the stack
+            // A valid early return inside an initializer
+            if isInitializer { return closureEnvironment.getAt(depth: 0, name: "this") }
             return error.value ?? .nil
         } catch {
             // TODO: handle error
         }
+
+        if isInitializer { return closureEnvironment.getAt(depth: 0, name: "this") }
         return .nil
     }
 
     func bind(_ instance: KrustInstance) -> KrustFunction {
         let environment = Environment(enclosing: closureEnvironment)
         environment.define("this", .classInstance(instance))
-        return KrustFunction(declaration: declaration, closureEnvironment: environment)
+        return KrustFunction(declaration: declaration, closureEnvironment: environment, isInitializer: isInitializer)
     }
 }

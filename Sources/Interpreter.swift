@@ -62,7 +62,7 @@ extension Interpreter: Stmt.Visitor {
 
         var methods: [String: KrustFunction] = [:]
         for method in stmt.methods {
-            let function = KrustFunction(declaration: method, closureEnvironment: environment)
+            let function = KrustFunction(declaration: method, closureEnvironment: environment, isInitializer: method.name.lexeme == "init")
             methods[method.name.lexeme] = function
         }
 
@@ -78,7 +78,8 @@ extension Interpreter: Stmt.Visitor {
     }
 
     func visitFunctionStmt(_ stmt: Stmt.Function) throws {
-        let function = KrustFunction(declaration: stmt, closureEnvironment: environment)
+        // There could be a free function named init, but `this` would not be available, so it should be false
+        let function = KrustFunction(declaration: stmt, closureEnvironment: environment, isInitializer: false)
         environment.define(stmt.name.lexeme, .callable(function))
     }
 

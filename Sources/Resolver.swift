@@ -1,5 +1,5 @@
 enum FunctionType {
-    case function, method
+    case function, method, initializer
 }
 
 enum ClassType { case `class` }
@@ -151,7 +151,7 @@ extension Resolver: Stmt.Visitor {
         scopes[scopes.count - 1]["this"] = true
 
         for method in stmt.methods {
-            try resolveFunction(method, type: .method)
+            try resolveFunction(method, type: method.name.lexeme == "init" ? .initializer : .method)
         }
 
         endScope()
@@ -206,6 +206,9 @@ extension Resolver: Stmt.Visitor {
             ErrorReporter.reportError(token: stmt.keyword, message: "Can't return from top-level code")
         }
         guard let value = stmt.value else { return }
+        if currentFunction == .initializer {
+            ErrorReporter.reportError(token: stmt.keyword, message: "Can't return a value from an initializer")
+        }
         try resolve(value)
     }
 }

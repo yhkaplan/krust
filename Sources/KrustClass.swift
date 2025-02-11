@@ -13,9 +13,14 @@ final class KrustClass: CustomStringConvertible {
 }
 
 extension KrustClass: KrustCallable {
-    var arity: Int { 0 }
+    var arity: Int { findMethod(name: "init")?.arity ?? 0 }
 
     func call(interpreter: Interpreter, arguments: [Value]) -> Value {
-        .classInstance(KrustInstance(krustClass: self))
+        let instance = KrustInstance(krustClass: self)
+        if let initializer = findMethod(name: "init") {
+            _ = initializer.bind(instance).call(interpreter: interpreter, arguments: arguments)
+        }
+
+        return .classInstance(instance)
     }
 }
